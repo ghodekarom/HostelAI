@@ -1,0 +1,86 @@
+name: HFCMS Continuous Integration
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  backend-ci:
+    name: Backend Build & Tests (Spring Boot / Java 21)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: hfcms_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Verify Environment Template Parity
+        run: |
+          test -f .env.example || { echo "Missing backend/.env.example"; exit 1; }
+
+      - name: Build with Maven
+        run: mvn -B clean package -DskipTests=false
+        env:
+          SPRING_PROFILES_ACTIVE: local
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/hfcms_test
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgres
+          AI_MOCK_ENABLED: true
+          STORAGE_PROVIDER: local
+          EMAIL_PROVIDER: mailpit
+
+  frontend-ci:
+    name: Frontend Quality & Tests (Flutter / Dart)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Verify Environment Template Parity
+        run: |
+          test -f .env.example || { echo "Missing frontend/.env.example"; exit 1; }
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Static Code Analysis (Linter)
+        run: flutter analyze
+
+      - name: Run Flutter Tests
+        run: flutter test

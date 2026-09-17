@@ -1,0 +1,69 @@
+# ==============================================================================
+# Git Ignore - Hostel Facility Complaint Management System (HFCMS)
+# ==============================================================================
+
+# Environment files & Secrets (STRICT: NEVER COMMIT SECRETS)
+.env
+*.env
+!.env.example
+backend/.env
+frontend/.env
+*.local
+*.secret
+*.pem
+*.key
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# IDE & Editor Configuration
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.code-workspace
+.project
+.classpath
+.settings/
+.fleet/
+.antigravity/
+
+# Backend (Java / Maven / Gradle)
+backend/target/
+backend/build/
+backend/.gradle/
+backend/out/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+backend/uploads/
+backend/logs/
+
+# Frontend (Flutter / Dart)
+frontend/.dart_tool/
+frontend/.packages
+frontend/build/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/coverage/
+frontend/ios/.symlinks/
+frontend/ios/Pods/
+frontend/ios/Podfile.lock
+frontend/android/.gradle/
+frontend/android/local.properties
+frontend/android/app/release/
+frontend/android/key.properties
+frontend/windows/flutter/ephemeral/
+frontend/linux/flutter/ephemeral/
+frontend/macos/Flutter/ephemeral/
+
+# Docker local data volumes
+.docker-data/
+postgres-data/
+mailpit-data/
