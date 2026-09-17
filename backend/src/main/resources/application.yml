@@ -67,3 +67,8 @@ app:
     anthropic:
       api-key: ${AI_ANTHROPIC_API_KEY:}
       model: ${AI_ANTHROPIC_MODEL:claude-3-5-sonnet-20241022}
+  risk:
+    evaluation-cron: ${RISK_EVALUATION_CRON:0 */15 * * * *}
+    inactivity-hours: ${RISK_INACTIVITY_HOURS:24}
+    imminent-sla-hours: ${RISK_IMMINENT_SLA_HOURS:4}
+
