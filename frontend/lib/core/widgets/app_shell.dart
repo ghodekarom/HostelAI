@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/app_colors.dart';
 import '../../providers/role_provider.dart';
+import '../../providers/notification_provider.dart';
 
 class AppShell extends ConsumerWidget {
   final Widget child;
@@ -12,7 +13,8 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeRole = ref.watch(roleProvider);
-    final isWide = MediaQuery.of(context).size.width >= 850;
+    final unreadCount = ref.watch(unreadNotificationsCountProvider);
+    final isWide = MediaQuery.of(context).size.width >= 900;
     final currentRoute = GoRouterState.of(context).uri.path;
 
     return Scaffold(
@@ -23,7 +25,7 @@ class AppShell extends ConsumerWidget {
           Expanded(
             child: Column(
               children: [
-                _buildHeader(context, ref, activeRole, isWide),
+                _buildHeader(context, ref, activeRole, unreadCount, isWide),
                 Expanded(child: child),
               ],
             ),
@@ -31,7 +33,7 @@ class AppShell extends ConsumerWidget {
         ],
       ),
       bottomNavigationBar: !isWide
-          ? _buildBottomNav(context, currentRoute, activeRole)
+          ? _buildBottomNav(context, currentRoute)
           : null,
     );
   }
@@ -43,12 +45,10 @@ class AppShell extends ConsumerWidget {
     String currentRoute,
   ) {
     return Container(
-      width: 250,
+      width: 260,
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(
-          right: BorderSide(color: AppColors.border),
-        ),
+        border: Border(right: BorderSide(color: AppColors.border)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,11 +64,7 @@ class AppShell extends ConsumerWidget {
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
-                    Icons.apartment_rounded,
-                    color: Colors.white,
-                    size: 22,
-                  ),
+                  child: const Icon(Icons.apartment_rounded, color: Colors.white, size: 22),
                 ),
                 const SizedBox(width: 12),
                 const Expanded(
@@ -99,7 +95,7 @@ class AppShell extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Navigation Links
           Expanded(
@@ -114,17 +110,12 @@ class AppShell extends ConsumerWidget {
                   currentRoute: currentRoute,
                   onTap: () => context.go('/'),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   child: Text(
-                    'PORTALS',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textMuted,
-                      letterSpacing: 1,
-                    ),
+                    'OPERATIONAL ROLES',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 1),
                   ),
                 ),
                 _navItem(
@@ -154,13 +145,37 @@ class AppShell extends ConsumerWidget {
                 _navItem(
                   icon: Icons.handyman_outlined,
                   activeIcon: Icons.handyman,
-                  label: 'Technician Tasks',
+                  label: 'Technician Console',
                   route: '/technician',
                   currentRoute: currentRoute,
                   badgeColor: AppColors.roleTechnician,
                   onTap: () {
                     ref.read(roleProvider.notifier).setRole(UserRole.technician);
                     context.go('/technician');
+                  },
+                ),
+                _navItem(
+                  icon: Icons.supervisor_account_outlined,
+                  activeIcon: Icons.supervisor_account,
+                  label: 'Warden / Team Lead',
+                  route: '/team-lead',
+                  currentRoute: currentRoute,
+                  badgeColor: AppColors.priorityCritical,
+                  onTap: () {
+                    ref.read(roleProvider.notifier).setRole(UserRole.teamLead);
+                    context.go('/team-lead');
+                  },
+                ),
+                _navItem(
+                  icon: Icons.insights_outlined,
+                  activeIcon: Icons.insights,
+                  label: 'Manager Analytics',
+                  route: '/manager',
+                  currentRoute: currentRoute,
+                  badgeColor: AppColors.verifiedGreen,
+                  onTap: () {
+                    ref.read(roleProvider.notifier).setRole(UserRole.manager);
+                    context.go('/manager');
                   },
                 ),
                 _navItem(
@@ -175,11 +190,35 @@ class AppShell extends ConsumerWidget {
                     context.go('/admin');
                   },
                 ),
+                const SizedBox(height: 14),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  child: Text(
+                    'SYSTEM',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 1),
+                  ),
+                ),
+                _navItem(
+                  icon: Icons.notifications_outlined,
+                  activeIcon: Icons.notifications,
+                  label: 'Notifications',
+                  route: '/notifications',
+                  currentRoute: currentRoute,
+                  onTap: () => context.go('/notifications'),
+                ),
+                _navItem(
+                  icon: Icons.lock_outline,
+                  activeIcon: Icons.lock,
+                  label: 'Authentication',
+                  route: '/login',
+                  currentRoute: currentRoute,
+                  onTap: () => context.go('/login'),
+                ),
               ],
             ),
           ),
 
-          // Active Role Card
+          // Active Role Footer
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Container(
@@ -194,28 +233,17 @@ class AppShell extends ConsumerWidget {
                   CircleAvatar(
                     radius: 16,
                     backgroundColor: _roleColor(activeRole).withOpacity(0.15),
-                    child: Icon(
-                      _roleIcon(activeRole),
-                      size: 16,
-                      color: _roleColor(activeRole),
-                    ),
+                    child: Icon(_roleIcon(activeRole), size: 16, color: _roleColor(activeRole)),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Simulated Role',
-                          style: TextStyle(fontSize: 10, color: AppColors.textMuted),
-                        ),
+                        const Text('Simulated Persona', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
                         Text(
                           activeRole.displayName,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -234,6 +262,7 @@ class AppShell extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     UserRole activeRole,
+    int unreadCount,
     bool isWide,
   ) {
     return Container(
@@ -255,14 +284,11 @@ class AppShell extends ConsumerWidget {
               child: const Icon(Icons.apartment, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 10),
-            const Text(
-              'HFCMS',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-            ),
+            const Text('HFCMS', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
           ],
           const Spacer(),
 
-          // Live Backend Status Pill
+          // API Status Pill
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
@@ -276,12 +302,8 @@ class AppShell extends ConsumerWidget {
                 Icon(Icons.circle, color: AppColors.verifiedGreen, size: 8),
                 SizedBox(width: 6),
                 Text(
-                  'API Live (8080)',
-                  style: TextStyle(
-                    color: AppColors.verifiedGreen,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  'API Live',
+                  style: TextStyle(color: AppColors.verifiedGreen, fontSize: 11, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -301,11 +323,7 @@ class AppShell extends ConsumerWidget {
                 value: activeRole,
                 isDense: true,
                 icon: Icon(Icons.arrow_drop_down, color: _roleColor(activeRole)),
-                style: TextStyle(
-                  color: _roleColor(activeRole),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(color: _roleColor(activeRole), fontSize: 12, fontWeight: FontWeight.w700),
                 items: UserRole.values.map((role) {
                   return DropdownMenuItem(
                     value: role,
@@ -325,6 +343,12 @@ class AppShell extends ConsumerWidget {
                       case UserRole.technician:
                         context.go('/technician');
                         break;
+                      case UserRole.teamLead:
+                        context.go('/team-lead');
+                        break;
+                      case UserRole.manager:
+                        context.go('/manager');
+                        break;
                       case UserRole.admin:
                         context.go('/admin');
                         break;
@@ -334,21 +358,46 @@ class AppShell extends ConsumerWidget {
               ),
             ),
           ),
+          const SizedBox(width: 12),
+
+          // Notification Bell with Badge
+          IconButton(
+            onPressed: () => context.go('/notifications'),
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.notifications_outlined, size: 22, color: AppColors.textSecondary),
+                if (unreadCount > 0)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: AppColors.priorityCritical,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        unreadCount.toString(),
+                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildBottomNav(
-    BuildContext context,
-    String currentRoute,
-    UserRole activeRole,
-  ) {
+  Widget _buildBottomNav(BuildContext context, String currentRoute) {
     int selectedIndex = 0;
     if (currentRoute.startsWith('/student')) selectedIndex = 1;
     if (currentRoute.startsWith('/operator')) selectedIndex = 2;
     if (currentRoute.startsWith('/technician')) selectedIndex = 3;
-    if (currentRoute.startsWith('/admin')) selectedIndex = 4;
+    if (currentRoute.startsWith('/team-lead')) selectedIndex = 4;
+    if (currentRoute.startsWith('/manager')) selectedIndex = 5;
 
     return NavigationBar(
       selectedIndex: selectedIndex,
@@ -369,7 +418,10 @@ class AppShell extends ConsumerWidget {
             context.go('/technician');
             break;
           case 4:
-            context.go('/admin');
+            context.go('/team-lead');
+            break;
+          case 5:
+            context.go('/manager');
             break;
         }
       },
@@ -377,8 +429,9 @@ class AppShell extends ConsumerWidget {
         NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
         NavigationDestination(icon: Icon(Icons.school_outlined), label: 'Student'),
         NavigationDestination(icon: Icon(Icons.support_agent_outlined), label: 'Operator'),
-        NavigationDestination(icon: Icon(Icons.handyman_outlined), label: 'Technician'),
-        NavigationDestination(icon: Icon(Icons.admin_panel_settings_outlined), label: 'Admin'),
+        NavigationDestination(icon: Icon(Icons.handyman_outlined), label: 'Tech'),
+        NavigationDestination(icon: Icon(Icons.supervisor_account_outlined), label: 'Lead'),
+        NavigationDestination(icon: Icon(Icons.insights_outlined), label: 'Manager'),
       ],
     );
   }
@@ -392,9 +445,7 @@ class AppShell extends ConsumerWidget {
     required VoidCallback onTap,
     Color? badgeColor,
   }) {
-    final isSelected = route == '/'
-        ? currentRoute == '/'
-        : currentRoute.startsWith(route);
+    final isSelected = route == '/' ? currentRoute == '/' : currentRoute.startsWith(route);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
@@ -405,11 +456,7 @@ class AppShell extends ConsumerWidget {
       child: ListTile(
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-        leading: Icon(
-          isSelected ? activeIcon : icon,
-          size: 20,
-          color: isSelected ? AppColors.primary : AppColors.textSecondary,
-        ),
+        leading: Icon(isSelected ? activeIcon : icon, size: 20, color: isSelected ? AppColors.primary : AppColors.textSecondary),
         title: Text(
           label,
           style: TextStyle(
@@ -438,6 +485,10 @@ class AppShell extends ConsumerWidget {
         return AppColors.roleOperator;
       case UserRole.technician:
         return AppColors.roleTechnician;
+      case UserRole.teamLead:
+        return AppColors.priorityCritical;
+      case UserRole.manager:
+        return AppColors.verifiedGreen;
       case UserRole.admin:
         return AppColors.roleAdmin;
     }
@@ -451,6 +502,10 @@ class AppShell extends ConsumerWidget {
         return Icons.support_agent;
       case UserRole.technician:
         return Icons.handyman;
+      case UserRole.teamLead:
+        return Icons.supervisor_account;
+      case UserRole.manager:
+        return Icons.insights;
       case UserRole.admin:
         return Icons.admin_panel_settings;
     }

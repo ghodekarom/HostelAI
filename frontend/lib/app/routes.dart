@@ -9,7 +9,15 @@ import '../features/operator/operator_queue_screen.dart';
 import '../features/operator/operator_triage_screen.dart';
 import '../features/technician/technician_tasks_screen.dart';
 import '../features/technician/technician_task_detail_screen.dart';
+import '../features/team_lead/team_lead_at_risk_screen.dart';
+import '../features/team_lead/team_lead_intervention_screen.dart';
+import '../features/manager/manager_analytics_screen.dart';
 import '../features/admin/admin_dashboard_screen.dart';
+import '../features/notifications/notifications_screen.dart';
+import '../features/auth/sign_in_screen.dart';
+import '../features/auth/sign_up_screen.dart';
+import '../features/auth/verify_code_screen.dart';
+import '../features/auth/password_reset_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -30,7 +38,7 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => const PortalHomeScreen(),
         ),
 
-        // Student Portal
+        // 1. Student Portal
         GoRoute(
           path: '/student',
           builder: (context, state) => const StudentDashboardScreen(),
@@ -49,7 +57,7 @@ final GoRouter appRouter = GoRouter(
           ],
         ),
 
-        // Operator Room
+        // 2. Operator Room
         GoRoute(
           path: '/operator',
           builder: (context, state) => const OperatorQueueScreen(),
@@ -64,7 +72,7 @@ final GoRouter appRouter = GoRouter(
           ],
         ),
 
-        // Technician Console
+        // 3. Technician Console
         GoRoute(
           path: '/technician',
           builder: (context, state) => const TechnicianTasksScreen(),
@@ -79,23 +87,60 @@ final GoRouter appRouter = GoRouter(
           ],
         ),
 
-        // Admin Hub
+        // 4. Warden / Team Lead Console
+        GoRoute(
+          path: '/team-lead',
+          builder: (context, state) => const TeamLeadAtRiskScreen(),
+          routes: [
+            GoRoute(
+              path: 'complaints/:id',
+              builder: (context, state) {
+                final id = int.tryParse(state.pathParameters['id'] ?? '1') ?? 1;
+                return TeamLeadInterventionScreen(id: id);
+              },
+            ),
+          ],
+        ),
+
+        // 5. Manager Analytics
+        GoRoute(
+          path: '/manager',
+          builder: (context, state) => const ManagerAnalyticsScreen(),
+        ),
+
+        // 6. Campus Admin Hub
         GoRoute(
           path: '/admin',
           builder: (context, state) => const AdminDashboardScreen(),
         ),
+
+        // In-App Notifications
+        GoRoute(
+          path: '/notifications',
+          builder: (context, state) => const NotificationsScreen(),
+        ),
       ],
     ),
 
-    // Auth Screen Placeholder (Phase 5)
+    // Authentication Routes (Standalone outside Shell)
     GoRoute(
       path: '/login',
-      builder: (context, state) => Scaffold(
-        appBar: AppBar(title: const Text('Sign In')),
-        body: const Center(
-          child: Text('Authentication & RBAC scheduled for Phase 5'),
-        ),
-      ),
+      builder: (context, state) => const SignInScreen(),
+    ),
+    GoRoute(
+      path: '/signup',
+      builder: (context, state) => const SignUpScreen(),
+    ),
+    GoRoute(
+      path: '/verify',
+      builder: (context, state) {
+        final email = state.uri.queryParameters['email'];
+        return VerifyCodeScreen(email: email);
+      },
+    ),
+    GoRoute(
+      path: '/password-reset',
+      builder: (context, state) => const PasswordResetScreen(),
     ),
   ],
 );
