@@ -1,0 +1,30 @@
+#!/bin/sh
+# ----------------------------------------------------------------------------
+# Maven Wrapper for Unix (HFCMS Backend)
+# ----------------------------------------------------------------------------
+set -e
+
+DIR=$(cd "$(dirname "$0")" && pwd)
+WRAPPER_PROPERTIES="$DIR/.mvn/wrapper/maven-wrapper.properties"
+
+if [ ! -f "$WRAPPER_PROPERTIES" ]; then
+    echo "Error: Missing $WRAPPER_PROPERTIES"
+    exit 1
+fi
+
+DIST_URL=$(grep '^distributionUrl=' "$WRAPPER_PROPERTIES" | cut -d'=' -f2)
+MAVEN_HOME="$HOME/.m2/wrapper/dists/apache-maven-3.9.9"
+MAVEN_BIN="$MAVEN_HOME/bin/mvn"
+
+if [ ! -f "$MAVEN_BIN" ]; then
+    echo "Downloading Maven distribution from $DIST_URL ..."
+    mkdir -p "$HOME/.m2/wrapper/dists"
+    TEMP_ZIP="/tmp/maven-$$.zip"
+    curl -sSL "$DIST_URL" -o "$TEMP_ZIP"
+    unzip -q "$TEMP_ZIP" -d "$HOME/.m2/wrapper/dists"
+    rm -f "$TEMP_ZIP"
+    mv "$HOME/.m2/wrapper/dists"/apache-maven-* "$MAVEN_HOME" 2>/dev/null || true
+    chmod +x "$MAVEN_BIN"
+fi
+
+exec "$MAVEN_BIN" "$@"
