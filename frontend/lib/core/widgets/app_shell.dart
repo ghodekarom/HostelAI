@@ -19,18 +19,22 @@ class AppShell extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Row(
-        children: [
-          if (isWide) _buildSidebar(context, ref, activeRole, currentRoute),
-          Expanded(
-            child: Column(
-              children: [
-                _buildHeader(context, ref, activeRole, unreadCount, isWide),
-                Expanded(child: child),
-              ],
+      body: SafeArea(
+        top: !isWide,
+        bottom: false,
+        child: Row(
+          children: [
+            if (isWide) _buildSidebar(context, ref, activeRole, currentRoute),
+            Expanded(
+              child: Column(
+                children: [
+                  _buildHeader(context, ref, activeRole, unreadCount, isWide),
+                  Expanded(child: child),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: !isWide
           ? _buildBottomNav(context, currentRoute)
