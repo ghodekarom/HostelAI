@@ -61,8 +61,8 @@
 ---
 
 ### [x] Phase 3: Core Backend API & Business Logic
-- **Branch:** `feature/phase-03-backend`
-- **Goal:** Implement Spring Boot domain models, repositories, services, DTOs, REST controllers, and manual complaint lifecycle.
+- **Branch:** `feature/phase-03-backend` (committed and merged to `dev`)
+- **Goal:** Implement Spring Boot domain models, repositories, services, DTOs, REST controllers, and manual complaint lifecycle with live PostgreSQL verification.
 - **Tasks:**
   - [x] Implement JPA Entities adhering strictly to database schema
   - [x] Implement Spring Data JPA Repositories
@@ -81,7 +81,15 @@
   - [x] Configure OpenAPI / Swagger documentation (`springdoc-openapi`)
   - [x] Configure SLF4J + Logback structured logging & Spring Actuator health checks
   - [x] Write Backend Unit & Integration Tests (JUnit 5, Mockito)
-- **Exit Criteria:** Full manual complaint lifecycle operates end-to-end via REST API with passing tests.
+  - [x] Configure local `backend/.env` with PostgreSQL 18 credentials (`password`)
+  - [x] Implement automatic `.env` loader in `HfcmsApplication.java`
+  - [x] Create `hfcms` database locally and execute all 7 Flyway migrations (`V1`..`V7`) creating all 23 tables
+  - [x] Fix PostgreSQL `jsonb` schema validation on `Complaint.risk_reasons` with `@JdbcTypeCode(SqlTypes.JSON)`
+  - [x] Implement clean `ChecklistResponse` DTO to prevent Hibernate proxy / ByteBuddy serialization errors
+  - [x] Add Admin infrastructure creation endpoints (`POST /api/v1/admin/hostels`, `/blocks`, `/rooms`)
+  - [x] Execute live end-to-end 14-step complaint lifecycle through REST APIs
+  - [x] Verify live Swagger UI in browser (`http://localhost:8080/swagger-ui/index.html`) across all controller tags
+- **Exit Criteria:** Full manual complaint lifecycle operates end-to-end via REST API with passing tests and verified live on PostgreSQL with Swagger UI.
 
 ---
 
@@ -243,3 +251,4 @@
 | 2026-09-17 | Phase 1 | Initialized monorepo, Spring Boot backend, Flutter frontend, Docker Compose, CI workflow, and environment templates on branch `feature/phase-01-project-setup`. | AI Assistant |
 | 2026-09-17 | Phase 2 | Implemented complete PostgreSQL 15+ schema with 7 Flyway migrations (`V1`..`V7`), pg_trgm trigram search, foreign keys, operational indexes, and reference seeds on branch `feature/phase-02-database`. | AI Assistant |
 | 2026-09-17 | Phase 3 | Implemented JPA domain models, Spring Data repositories, DTOs, storage abstraction, student complaint lifecycle, operator triage, missing-info loop, technician task logging, resolution proposal/decisions, audit trail, and passing unit tests on branch `feature/phase-03-backend`. | AI Assistant |
+| 2026-09-17 | Phase 3 (Verification) | Configured local `.env`, initialized `hfcms` database on PostgreSQL 18, ran all 7 Flyway migrations, resolved Hibernate jsonb mapping, added `ChecklistResponse` DTO, tested full 14-step complaint lifecycle via REST APIs, verified Swagger UI live in browser, and synced branch `feature/phase-03-backend` to `dev` and GitHub. | AI Assistant |
