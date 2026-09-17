@@ -12,10 +12,10 @@
 
 | Metric | Status / Value |
 |---|---|
-| **Current Phase** | Phase 2 — Database Infrastructure & Migrations (Completed) |
-| **Current Active Branch** | `feature/phase-02-database` |
-| **Completed Phases** | 2 / 10 |
-| **Overall Progress** | 20% |
+| **Current Phase** | Phase 3 — Core Backend API & Business Logic (Completed) |
+| **Current Active Branch** | `feature/phase-03-backend` |
+| **Completed Phases** | 3 / 10 |
+| **Overall Progress** | 30% |
 | **Last Updated** | 2026-09-17 |
 
 ---
@@ -60,27 +60,27 @@
 
 ---
 
-### [ ] Phase 3: Core Backend API & Business Logic
+### [x] Phase 3: Core Backend API & Business Logic
 - **Branch:** `feature/phase-03-backend`
 - **Goal:** Implement Spring Boot domain models, repositories, services, DTOs, REST controllers, and manual complaint lifecycle.
 - **Tasks:**
-  - [ ] Implement JPA Entities adhering strictly to database schema
-  - [ ] Implement Spring Data JPA Repositories
-  - [ ] Implement Request and Response DTOs (no entities exposed directly in APIs)
-  - [ ] Implement Centralized Global Exception Handler (`@RestControllerAdvice`) and standard error response
-  - [ ] Implement Server-side Bean Validation (`jakarta.validation`)
-  - [ ] Implement Storage Service Abstraction (Supabase Storage with local filesystem fallback)
-  - [ ] Implement Reference Data APIs (`/api/v1/admin/categories`, `/teams`, `/hostels`, `/blocks`, `/rooms`)
-  - [ ] Implement Student Complaint APIs (`POST /api/v1/complaints`, `GET /mine`, `GET /{id}`, `POST /{id}/evidence`)
-  - [ ] Implement Operator Queue & Review APIs (`GET /api/v1/operator/queue`, `POST /{id}/review`, `POST /{id}/assign`)
-  - [ ] Implement Related Cases APIs (`GET /{id}/related-cases`, `POST /{id}/related-cases/{relatedId}/decision`)
-  - [ ] Implement Missing Information Workflow APIs (operator request, student response)
-  - [ ] Implement Technician Task & Checklist APIs (`GET /assigned`, `POST /checklist/{itemId}/finding`, `POST /repair-actions`)
-  - [ ] Implement Resolution Proposal & Student Decision APIs (`POST /resolution`, `POST /resolution/decision`)
-  - [ ] Implement Audit & Case Status History recording on every state transition
-  - [ ] Configure OpenAPI / Swagger documentation (`springdoc-openapi`)
-  - [ ] Configure SLF4J + Logback structured logging & Spring Actuator health checks
-  - [ ] Write Backend Unit & Integration Tests (JUnit 5, Mockito, Testcontainers)
+  - [x] Implement JPA Entities adhering strictly to database schema
+  - [x] Implement Spring Data JPA Repositories
+  - [x] Implement Request and Response DTOs (no entities exposed directly in APIs)
+  - [x] Implement Centralized Global Exception Handler (`@RestControllerAdvice`) and standard error response
+  - [x] Implement Server-side Bean Validation (`jakarta.validation`)
+  - [x] Implement Storage Service Abstraction (Supabase Storage with local filesystem fallback)
+  - [x] Implement Reference Data APIs (`/api/v1/admin/categories`, `/teams`, `/hostels`, `/blocks`, `/rooms`)
+  - [x] Implement Student Complaint APIs (`POST /api/v1/complaints`, `GET /mine`, `GET /{id}`, `POST /{id}/evidence`)
+  - [x] Implement Operator Queue & Review APIs (`GET /api/v1/operator/queue`, `POST /{id}/review`, `POST /{id}/assign`)
+  - [x] Implement Related Cases APIs (`GET /{id}/related-cases`, `POST /{id}/related-cases/{relatedId}/decision`)
+  - [x] Implement Missing Information Workflow APIs (operator request, student response)
+  - [x] Implement Technician Task & Checklist APIs (`GET /assigned`, `POST /checklist/{itemId}/finding`, `POST /repair-actions`)
+  - [x] Implement Resolution Proposal & Student Decision APIs (`POST /resolution`, `POST /resolution/decision`)
+  - [x] Implement Audit & Case Status History recording on every state transition
+  - [x] Configure OpenAPI / Swagger documentation (`springdoc-openapi`)
+  - [x] Configure SLF4J + Logback structured logging & Spring Actuator health checks
+  - [x] Write Backend Unit & Integration Tests (JUnit 5, Mockito)
 - **Exit Criteria:** Full manual complaint lifecycle operates end-to-end via REST API with passing tests.
 
 ---
@@ -242,3 +242,4 @@
 | 2026-09-17 | Initial Setup | Initialized `progress.md` tracking document based on PRD v1.3 and SRS v1.1. | AI Assistant |
 | 2026-09-17 | Phase 1 | Initialized monorepo, Spring Boot backend, Flutter frontend, Docker Compose, CI workflow, and environment templates on branch `feature/phase-01-project-setup`. | AI Assistant |
 | 2026-09-17 | Phase 2 | Implemented complete PostgreSQL 15+ schema with 7 Flyway migrations (`V1`..`V7`), pg_trgm trigram search, foreign keys, operational indexes, and reference seeds on branch `feature/phase-02-database`. | AI Assistant |
+| 2026-09-17 | Phase 3 | Implemented JPA domain models, Spring Data repositories, DTOs, storage abstraction, student complaint lifecycle, operator triage, missing-info loop, technician task logging, resolution proposal/decisions, audit trail, and passing unit tests on branch `feature/phase-03-backend`. | AI Assistant |
