@@ -19,6 +19,7 @@
   - `origin/feature/phase-03-backend` (Visible on remote)
   - `origin/feature/phase-04-frontend` (Visible on remote)
   - `origin/feature/phase-04-frontend-full` (Visible on remote)
+  - `origin/feature/phase-04-multiplatform` (Visible on remote - Android, iOS, Windows, Linux, macOS)
 - **Branching Rules:**
   - Strict 3-tier: `feature/phase-XX-*` ➔ `dev` ➔ `main`.
   - Feature branches are never deleted from remote GitHub upon merging; keep them published.
@@ -74,6 +75,14 @@
   - `Riverpod` State Management: AsyncNotifiers and family providers for all domain layers.
   - `SecureStorageService`: Encrypted JWT and refresh token persistence.
   - Automated tests: `models_test.dart` and `widget_test.dart`.
+- **Multiplatform Scaffolding Adhering to SRS §1.3 & §6.2:**
+  - **Android (`frontend/android/`):** Root & app Gradle 8 build scripts, AndroidX, `MainActivity.kt`, `AndroidManifest.xml` with camera & storage permissions.
+  - **iOS (`frontend/ios/`):** Podfile (iOS 13+), Xcode project (`project.pbxproj`), `AppDelegate.swift`, `Info.plist` with camera/photo library usage descriptions, LaunchScreen & Main storyboards.
+  - **Windows Desktop (`frontend/windows/`):** CMake build system, Win32 C++ runner (`main.cpp`, `flutter_window.cpp`, `win32_window.cpp`), DPI awareness manifest, resources (`Runner.rc`).
+  - **Linux Desktop (`frontend/linux/`):** CMake build system, GTK 3.0 C++ runner (`main.cc`, `my_application.cc`), window configuration.
+  - **macOS Desktop (`frontend/macos/`):** Podfile, Xcode project, AppKit Cocoa Swift runner (`AppDelegate.swift`, `MainFlutterWindow.swift`), AppInfo xcconfigs, MainMenu nib.
+  - **Web Client (`frontend/web/`):** `index.html`, PWA `manifest.json`.
+  - **Cross-Platform Adaptations:** `PlatformUtils` runtime detection, `HfcmsScrollBehavior` for mouse/touch/stylus drag across all devices, mobile `SafeArea` integration in `AppShell`.
 
 ---
 
