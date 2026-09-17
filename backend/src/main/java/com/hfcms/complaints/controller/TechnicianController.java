@@ -34,8 +34,8 @@ public class TechnicianController {
 
     @GetMapping("/api/v1/complaints/{id}/checklist")
     @Operation(summary = "Get the diagnostic inspection checklist for a complaint")
-    public ResponseEntity<ApiResponse<InvestigationChecklist>> getChecklist(@PathVariable Long id) {
-        InvestigationChecklist checklist = technicianService.getChecklistForComplaint(id);
+    public ResponseEntity<ApiResponse<com.hfcms.complaints.dto.ChecklistResponse>> getChecklist(@PathVariable Long id) {
+        com.hfcms.complaints.dto.ChecklistResponse checklist = technicianService.getChecklistForComplaint(id);
         return ResponseEntity.ok(ApiResponse.success(checklist));
     }
 

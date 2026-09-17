@@ -10,7 +10,9 @@ import com.hfcms.users.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
@@ -94,7 +96,8 @@ public class Complaint {
     @Builder.Default
     private Boolean isAtRisk = false;
 
-    @Column(name = "risk_reasons", columnDefinition = "TEXT")
+    @Column(name = "risk_reasons", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String riskReasons;
 
     @CreationTimestamp
