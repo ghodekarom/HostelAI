@@ -3,9 +3,13 @@ import 'package:hfcms_frontend/models/complaint_model.dart';
 import 'package:hfcms_frontend/models/complaint_detail_model.dart';
 import 'package:hfcms_frontend/models/checklist_model.dart';
 import 'package:hfcms_frontend/models/reference_data_models.dart';
+import 'package:hfcms_frontend/models/auth_models.dart';
+import 'package:hfcms_frontend/models/team_lead_models.dart';
+import 'package:hfcms_frontend/models/analytics_models.dart';
+import 'package:hfcms_frontend/models/notification_models.dart';
 
 void main() {
-  group('ComplaintModel Deserialization Tests', () {
+  group('SRS Domain Model Deserialization Tests', () {
     test('parses ComplaintModel from standard backend JSON', () {
       final json = {
         'id': 10,
@@ -110,28 +114,84 @@ void main() {
       expect(checklist.items.last.status, 'PENDING');
     });
 
-    test('parses Reference Data models (Hostel, Category, Team)', () {
-      final hostel = HostelModel.fromJson({
-        'id': 1,
-        'name': 'Aryabhata',
-        'code': 'HOSTEL-A',
-        'totalBlocks': 3,
-      });
-      final category = CategoryModel.fromJson({
-        'id': 1,
-        'name': 'Plumbing',
-        'code': 'PLUMBING',
-        'defaultSlaHours': 24,
-      });
-      final team = TeamModel.fromJson({
-        'id': 1,
-        'name': 'Plumbing Maintenance',
-        'code': 'TEAM-PLUMB',
+    test('parses AuthResponse model', () {
+      final auth = AuthResponse.fromJson({
+        'accessToken': 'jwt_access_token_123',
+        'refreshToken': 'jwt_refresh_token_456',
+        'email': 'student@hostel.edu',
+        'fullName': 'Rahul Sharma',
+        'role': 'STUDENT',
       });
 
-      expect(hostel.name, 'Aryabhata');
-      expect(category.defaultSlaHours, 24);
-      expect(team.code, 'TEAM-PLUMB');
+      expect(auth.accessToken, 'jwt_access_token_123');
+      expect(auth.email, 'student@hostel.edu');
+      expect(auth.role, 'STUDENT');
+    });
+
+    test('parses TeamLeadContextModel and InterventionRequest', () {
+      final ctx = TeamLeadContextModel.fromJson({
+        'complaint': {
+          'id': 3,
+          'caseNumber': 'HFCMS-2026-92F01A',
+          'description': 'Wi-Fi down',
+          'status': 'AT_RISK',
+          'createdAt': '2026-09-17T08:00:00Z',
+        },
+        'slaStatus': 'SLA Breached by 4 hours',
+        'affectedStudentsCount': 12,
+        'riskFactors': ['SLA target exceeded', 'Repeated follow-ups'],
+      });
+
+      expect(ctx.complaint.caseNumber, 'HFCMS-2026-92F01A');
+      expect(ctx.affectedStudentsCount, 12);
+      expect(ctx.riskFactors.length, 2);
+
+      final req = InterventionRequest(
+        action: 'BOOST_PRIORITY',
+        priority: 'P1',
+        notes: 'Accelerating due to exams',
+      );
+      expect(req.toJson()['action'], 'BOOST_PRIORITY');
+      expect(req.toJson()['priority'], 'P1');
+    });
+
+    test('parses Analytics models', () {
+      final summary = AnalyticsSummaryModel.fromJson({
+        'totalComplaints': 300,
+        'activeComplaints': 25,
+        'averageMttrHours': 10.5,
+        'averageMttaHours': 1.1,
+        'slaComplianceRate': 96.4,
+        'chronicHotspotsCount': 5,
+      });
+
+      expect(summary.totalComplaints, 300);
+      expect(summary.slaComplianceRate, 96.4);
+
+      final hotspot = HotspotItemModel.fromJson({
+        'location': 'Block A Floor 1',
+        'categoryName': 'Plumbing',
+        'complaintCount': 15,
+        'riskLevel': 'HIGH',
+      });
+      expect(hotspot.location, 'Block A Floor 1');
+      expect(hotspot.riskLevel, 'HIGH');
+    });
+
+    test('parses NotificationModel', () {
+      final notif = NotificationModel.fromJson({
+        'id': 1,
+        'title': 'Clarification Requested',
+        'message': 'Please provide room number',
+        'type': 'ACTION_REQUIRED',
+        'referenceId': 4,
+        'isRead': false,
+        'createdAt': '2026-09-17T11:00:00Z',
+      });
+
+      expect(notif.id, 1);
+      expect(notif.type, 'ACTION_REQUIRED');
+      expect(notif.isRead, false);
     });
   });
 }
