@@ -56,6 +56,7 @@ public class ComplaintService {
     private final RoomRepository roomRepository;
     private final CategoryRepository categoryRepository;
     private final AiComplaintService aiComplaintService;
+    private final com.hfcms.notifications.service.NotificationService notificationService;
 
     @Transactional
     public ComplaintResponse createComplaint(CreateComplaintRequest request, Long studentId) {
@@ -123,6 +124,20 @@ public class ComplaintService {
         }
 
         logger.info("New complaint created with case number: {}", caseNumber);
+
+        // Dispatch in-app and email notification to student
+        try {
+            notificationService.sendNotification(
+                    student.getId(),
+                    "Complaint Registered: " + savedComplaint.getCaseNumber(),
+                    "Your complaint regarding '" + category.getName() + "' has been successfully registered and queued for AI analysis and operator triage.",
+                    "COMPLAINT_FILED",
+                    savedComplaint.getCaseNumber(),
+                    true
+            );
+        } catch (Exception ex) {
+            logger.warn("Could not dispatch intake notification for complaint {}: {}", caseNumber, ex.getMessage());
+        }
 
         // Execute automated AI Case Understanding & Triage pipeline
         try {

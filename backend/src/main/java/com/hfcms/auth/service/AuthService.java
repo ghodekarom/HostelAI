@@ -16,6 +16,7 @@ import com.hfcms.users.entity.User;
 import com.hfcms.users.entity.UserStatus;
 import com.hfcms.users.repository.RoleRepository;
 import com.hfcms.users.repository.UserRepository;
+import com.hfcms.notifications.email.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +44,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final EmailService emailService;
 
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -267,6 +269,23 @@ public class AuthService {
                 .build();
 
         verificationCodeRepository.save(code);
+
+        // Dispatch email notification to user
+        String title = type == VerificationType.SIGNUP_VERIFICATION
+                ? "Verify Your HFCMS Account"
+                : "Reset Your HFCMS Password";
+        String htmlBody = """
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <h2 style="color: #4f46e5; margin-top: 0;">%s</h2>
+                    <p style="color: #4b5563; font-size: 14px;">Your 6-digit verification code is:</p>
+                    <div style="background: #f3f4f6; font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #111827; text-align: center; padding: 14px; border-radius: 6px; margin: 16px 0;">
+                        %s
+                    </div>
+                    <p style="color: #6b7280; font-size: 13px;">This code will expire in 15 minutes. If you did not request this code, please ignore this email.</p>
+                </div>
+                """.formatted(title, rawCode);
+
+        emailService.sendEmail(user.getEmail(), "[HFCMS] " + title, htmlBody, "Your HFCMS verification code is: " + rawCode);
 
         // Log code dispatch for local testing and observability
         log.info("[HFCMS AUTH] Dispatched 6-digit {} code to {}: {}", type, user.getEmail(), rawCode);

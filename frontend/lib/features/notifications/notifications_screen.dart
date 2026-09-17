@@ -65,10 +65,20 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                               ),
                             ],
                           ),
-                          FilterChip(
-                            label: const Text('Unread Only'),
-                            selected: _filterUnreadOnly,
-                            onSelected: (val) => setState(() => _filterUnreadOnly = val),
+                          Row(
+                            children: [
+                              TextButton.icon(
+                                onPressed: () => ref.read(notificationsProvider.notifier).markAllAsRead(),
+                                icon: const Icon(Icons.done_all, size: 16),
+                                label: const Text('Mark all read'),
+                              ),
+                              const SizedBox(width: 8),
+                              FilterChip(
+                                label: const Text('Unread Only'),
+                                selected: _filterUnreadOnly,
+                                onSelected: (val) => setState(() => _filterUnreadOnly = val),
+                              ),
+                            ],
                           ),
                         ],
                       ),

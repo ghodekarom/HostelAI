@@ -58,6 +58,9 @@ class AuthServiceTest {
     @Mock
     private JwtTokenProvider jwtTokenProvider;
 
+    @Mock
+    private com.hfcms.notifications.email.EmailService emailService;
+
     @InjectMocks
     private AuthService authService;
 

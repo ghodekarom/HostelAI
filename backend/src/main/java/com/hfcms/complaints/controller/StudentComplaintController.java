@@ -38,6 +38,8 @@ public class StudentComplaintController {
     private final MissingInfoService missingInfoService;
     private final ResolutionService resolutionService;
     private final StorageService storageService;
+    private final com.hfcms.notifications.service.NotificationService notificationService;
+    private final com.hfcms.teams.repository.TechnicianRepository technicianRepository;
 
     private Long resolveUserId(Long headerId) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
@@ -120,6 +122,33 @@ public class StudentComplaintController {
 
         Long resolvedStudentId = resolveUserId(studentId);
         resolutionService.decideResolution(id, request, resolvedStudentId);
+
+        try {
+            ComplaintResponse c = complaintService.getComplaintById(id);
+            boolean isConfirmed = request.getDecision() != null && request.getDecision().name().equals("CONFIRMED");
+            String title = isConfirmed
+                    ? "Resolution Confirmed: " + c.getCaseNumber()
+                    : "Resolution Rejected: " + c.getCaseNumber();
+            String msg = isConfirmed
+                    ? "Student has confirmed the resolution. Case is now successfully closed."
+                    : "Student has rejected the resolution proposal. Reason: " + (request.getFeedback() != null ? request.getFeedback() : "None provided");
+
+            if (c.getAssignedTechnicianId() != null) {
+                technicianRepository.findById(c.getAssignedTechnicianId()).ifPresent(tech -> {
+                    if (tech.getUser() != null) {
+                        notificationService.sendNotification(
+                                tech.getUser().getId(),
+                                title,
+                                msg,
+                                isConfirmed ? "RESOLUTION_CONFIRMED" : "RESOLUTION_REJECTED",
+                                c.getCaseNumber(),
+                                false
+                        );
+                    }
+                });
+            }
+        } catch (Exception ignored) {}
+
         return ResponseEntity.ok(ApiResponse.success("Resolution decision recorded successfully", null));
     }
 }

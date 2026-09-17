@@ -3,17 +3,17 @@
 **Project:** Hostel Facility Complaint Management System — AI Case Manager (HFCMS)  
 **Authoritative Specs:** PRD v1.3 & SRS v1.1  
 **Monorepo:** `backend/` (Spring Boot 3.3.4, Java 21) + `frontend/` (Flutter multiplatform)  
-**Last Updated:** 2026-09-17 (Phase 6 AI Complaint Analysis Pipeline Completed)
+**Last Updated:** 2026-09-17 (Phase 7 Notifications & Real-Time Updates Completed)
 
 ---
 
 ## 1. Active Git State & Remote Branches
 
-- **Active Local Branch:** `feature/phase-06-ai-pipeline` (ready to merge into `dev`)
+- **Active Local Branch:** `feature/phase-07-notifications` (ready to merge into `dev`)
 - **Remote Repository:** `https://github.com/ghodekarom/HostelAI.git`
 - **Published Remote Branches:**
   - `origin/main` (Production release branch)
-  - `origin/dev` (Active integration branch — Phases 1-5 merged)
+  - `origin/dev` (Active integration branch — Phases 1-6 merged)
   - `origin/feature/phase-01-project-setup`
   - `origin/feature/phase-02-database`
   - `origin/feature/phase-03-backend`
@@ -21,6 +21,7 @@
   - `origin/feature/phase-04-frontend-full`
   - `origin/feature/phase-04-multiplatform`
   - `origin/feature/phase-05-auth-rbac`
+  - `origin/feature/phase-06-ai-pipeline`
 - **Branching Rules:**
   - Strict 3-tier: `feature/phase-XX-*` ➔ `dev` ➔ `main`.
   - Feature branches are never deleted from remote GitHub upon merging; keep them published.
@@ -28,7 +29,7 @@
 
 ---
 
-## 2. Completed Phases Summary (60% Complete)
+## 2. Completed Phases Summary (70% Complete)
 
 ### Phase 1: Project Setup & Monorepo Foundation
 - Monorepo directory structure: `backend/`, `frontend/`, `docs/`, `.github/workflows/ci.yml`.
@@ -66,14 +67,17 @@
 - **Frontend Security:** Dio `AuthInterceptor` injecting Bearer token, automatic 401 token rotation and retry, persistent secure storage session management.
 
 ### Phase 6: AI Complaint Analysis Pipeline (SRS §8.4, §9 FR-2, FR-3, FR-7, FR-18)
-- **Multi-Provider AI Architecture:** Extensible `AiClient` interface with implementations for Google Gemini 1.5 Flash (`GeminiAiClient`), Anthropic Claude 3.5 Sonnet (`AnthropicAiClient`), and deterministic local fallback (`RuleBasedMockAiClient`).
-- **Automated Triage Pipeline:** Automatic complaint understanding upon submission — categorizes issues, assesses severity (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`), assigns priority (`P1`–`P4`), computes SLA deadlines, suggests maintenance team, generates concise AI summary, and identifies missing information.
-- **Duplicate & Related Case Linking:** Uses PostgreSQL `pg_trgm` GIN index similarity search (`similarity >= 0.3`) to automatically identify related cases and link them in `complaint_related_cases` with `PENDING_REVIEW` status.
-- **Dynamic Diagnostic Checklists:** Generates domain-tailored investigation checklists and checklist items (`investigation_checklists`, `checklist_items`) based on inferred category.
-- **Lifecycle Automation:** Automatically progresses status: `REPORTED` ➔ `UNDERSTOOD` ➔ `RELATED_CASES_CHECKED` ➔ `OPERATOR_REVIEW`.
-- **Inference Audit Logging & Resilience:** Logs latency, model name, status, and raw prompts/responses in `ai_analysis_log`. Adheres to non-blocking AI design (FR-18.1): complaint filing never fails if AI is unreachable.
-- **Operator On-Demand Re-Analysis:** Exposes `POST /api/v1/complaints/{id}/ai/analyze` for manual AI re-triggering.
-- **100% Test Coverage:** 25/25 backend tests passing across all suites.
+- **Multi-Provider AI Architecture:** Extensible `AiClient` interface (`gemini-1.5-flash`, `claude-3-5-sonnet`, `RuleBasedMockAiClient`).
+- **Automated Triage Pipeline:** Automatic categorization, severity assessment, priority assignment, SLA calculation, team suggestion, AI summary, missing information detection.
+- **Duplicate Linking & Checklists:** Trigram similarity matching (`pg_trgm`) and automated diagnostic checklist generation.
+
+### Phase 7: Notifications & Real-Time Updates (SRS §8.6, §8.9, §9 FR-16, §11.2, §13 Phase 7)
+- **Persistent In-App Notification Feed:** JPA `Notification` entity mapping `notifications` table, indexed queries by user and unread status.
+- **STOMP / WebSocket Real-Time Push:** `@EnableWebSocketMessageBroker` registering `/ws/notifications` with SockJS fallback and `WebSocketAuthInterceptor` enforcing JWT token authentication on `CONNECT` frames. Broadcasts to `/topic/user.{userId}.notifications` and `/topic/user.{userId}.unread-count`.
+- **Transactional Email Dispatch:** Asynchronous (`@Async`) `EmailDispatcherService` routing to `SmtpEmailService` (Mailpit port 1025) and `ResendEmailService` with non-blocking error degradation.
+- **Lifecycle Event Hooks:** Automatic alerts on complaint intake, technician dispatch, clarification requests, repair progress, and resolution proposals/confirmations.
+- **Frontend Real-Time Feed:** Connected `notification_repository.dart`, unread badge counter, and "Mark all read" controls in `notifications_screen.dart`.
+- **100% Test Coverage:** 40/40 backend tests passing across all suites.
 
 ---
 
@@ -89,12 +93,14 @@
 
 ---
 
-## 4. Next Phase to Implement: Phase 7
+## 4. Next Phase to Implement: Phase 8
 
-- **Phase 7 Name:** Notifications & Real-Time Updates
-- **Target Branch:** `feature/phase-07-notifications` (to be branched from `dev`)
+- **Phase 8 Name:** Risk / SLA Monitoring & Escalation
+- **Target Branch:** `feature/phase-08-risk-sla` (to be branched from `dev`)
 - **Core Scope:**
-  - In-app notification service and WebSocket/SSE real-time event dispatcher.
-  - Transactional email dispatch via JavaMailSender / Mailpit for critical lifecycle events (status change, technician assigned, resolution proposed).
-  - Notification preference management and unread count badges.
-  - Frontend notification center integration and live toast alerts.
+  - Scheduled SLA monitoring job (`@Scheduled(cron = "0 */15 * * * *")`): checks active cases approaching or breaching SLA deadlines.
+  - Automated risk evaluation: inactivity detection, affected student count evaluation, complexity risk scoring.
+  - Status updates: flags `is_at_risk = TRUE`, records risk reason and risk score.
+  - Team Lead Queue (`GET /api/v1/team-lead/at-risk`) and Case Context (`GET /api/v1/complaints/{id}/context`).
+  - Team Lead Intervention (`POST /api/v1/complaints/{id}/intervene`): reassign technician, escalate priority, add resources, override SLA.
+  - Audit logging in `assignment_history` and `case_status_history`.
