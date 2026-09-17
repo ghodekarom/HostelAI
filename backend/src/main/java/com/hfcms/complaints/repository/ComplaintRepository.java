@@ -29,6 +29,16 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     List<Complaint> findByIsAtRiskTrueOrderByCreatedAtDesc();
 
+    Page<Complaint> findByIsAtRiskTrueOrStatusOrderByCreatedAtDesc(ComplaintStatus status, Pageable pageable);
+
+    Page<Complaint> findByAssignedTeamIdAndIsAtRiskTrueOrderByCreatedAtDesc(Long teamId, Pageable pageable);
+
+    List<Complaint> findByStatusNotIn(Collection<ComplaintStatus> statuses);
+
+    long countByRoomIdAndCreatedAtAfterAndIdNot(Long roomId, java.time.Instant after, Long currentId);
+
+    long countByBlockIdAndCreatedAtAfterAndIdNot(Long blockId, java.time.Instant after, Long currentId);
+
     // Native query using PostgreSQL pg_trgm similarity search on description
     @Query(value = "SELECT * FROM complaints c " +
                    "WHERE c.id != :complaintId " +

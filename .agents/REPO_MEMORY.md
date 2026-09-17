@@ -3,17 +3,17 @@
 **Project:** Hostel Facility Complaint Management System — AI Case Manager (HFCMS)  
 **Authoritative Specs:** PRD v1.3 & SRS v1.1  
 **Monorepo:** `backend/` (Spring Boot 3.3.4, Java 21) + `frontend/` (Flutter multiplatform)  
-**Last Updated:** 2026-09-17 (Phase 7 Notifications & Real-Time Updates Completed)
+**Last Updated:** 2026-09-17 (Phase 8 Risk / SLA Monitoring & Escalation Completed)
 
 ---
 
 ## 1. Active Git State & Remote Branches
 
-- **Active Local Branch:** `feature/phase-07-notifications` (ready to merge into `dev`)
+- **Active Local Branch:** `feature/phase-08-risk-sla` (ready to merge into `dev`)
 - **Remote Repository:** `https://github.com/ghodekarom/HostelAI.git`
 - **Published Remote Branches:**
   - `origin/main` (Production release branch)
-  - `origin/dev` (Active integration branch — Phases 1-6 merged)
+  - `origin/dev` (Active integration branch — Phases 1-7 merged)
   - `origin/feature/phase-01-project-setup`
   - `origin/feature/phase-02-database`
   - `origin/feature/phase-03-backend`
@@ -22,6 +22,8 @@
   - `origin/feature/phase-04-multiplatform`
   - `origin/feature/phase-05-auth-rbac`
   - `origin/feature/phase-06-ai-pipeline`
+  - `origin/feature/phase-07-notifications`
+  - `origin/feature/phase-08-risk-sla`
 - **Branching Rules:**
   - Strict 3-tier: `feature/phase-XX-*` ➔ `dev` ➔ `main`.
   - Feature branches are never deleted from remote GitHub upon merging; keep them published.
@@ -29,7 +31,7 @@
 
 ---
 
-## 2. Completed Phases Summary (70% Complete)
+## 2. Completed Phases Summary (80% Complete)
 
 ### Phase 1: Project Setup & Monorepo Foundation
 - Monorepo directory structure: `backend/`, `frontend/`, `docs/`, `.github/workflows/ci.yml`.
@@ -79,6 +81,13 @@
 - **Frontend Real-Time Feed:** Connected `notification_repository.dart`, unread badge counter, and "Mark all read" controls in `notifications_screen.dart`.
 - **100% Test Coverage:** 40/40 backend tests passing across all suites.
 
+### Phase 8: Risk / SLA Monitoring & Escalation (SRS §8.6, §9 FR-8, FR-9, §13 Phase 8)
+- **5-Vector Automated Risk Engine:** `RiskEvaluationService` evaluating SLA breach/imminent proximity ($\le 4\text{h}$), operational inactivity ($>24\text{h}$), location hotspots ($\ge 2$ in room, $\ge 3$ in block), safety hazards (`CRITICAL` / `P1`), and stalled clarifications ($>48\text{h}$).
+- **Scheduled Automated Sweeper:** `@Scheduled(cron = "${app.risk.evaluation-cron:0 */15 * * * *}")` flagging `is_at_risk = TRUE` with structured JSONB reasons and transitioning `ACTIVE` complaints to `AT_RISK`.
+- **Team Lead Investigative Context:** `GET /api/v1/complaints/{id}/context` returning complete case timeline, SLA metrics, technician assignment history, checklist findings, and related cases.
+- **Team Lead At-Risk Queue & Interventions:** `GET /api/v1/team-lead/at-risk` and `POST /api/v1/complaints/{id}/intervene` supporting technician reassignment, team transfer, priority escalation, SLA deadline extension, and corrective directives with automatic status normalization to `ACTIVE` and full audit trails.
+- **100% Test Coverage:** 55/55 backend tests passing across all suites.
+
 ---
 
 ## 3. Local Environment & Service Configurations
@@ -93,14 +102,17 @@
 
 ---
 
-## 4. Next Phase to Implement: Phase 8
+## 4. Next Phase to Implement: Phase 9
 
-- **Phase 8 Name:** Risk / SLA Monitoring & Escalation
-- **Target Branch:** `feature/phase-08-risk-sla` (to be branched from `dev`)
+- **Phase 9 Name:** Manager Analytics & Facility Heatmaps
+- **Authoritative Specs:** SRS v1.1 §8.7, §9 FR-14, §13 Phase 9; PRD v1.3 §7.7
+- **Target Branch:** `feature/phase-09-analytics` (to be branched from `dev`)
 - **Core Scope:**
-  - Scheduled SLA monitoring job (`@Scheduled(cron = "0 */15 * * * *")`): checks active cases approaching or breaching SLA deadlines.
-  - Automated risk evaluation: inactivity detection, affected student count evaluation, complexity risk scoring.
-  - Status updates: flags `is_at_risk = TRUE`, records risk reason and risk score.
-  - Team Lead Queue (`GET /api/v1/team-lead/at-risk`) and Case Context (`GET /api/v1/complaints/{id}/context`).
-  - Team Lead Intervention (`POST /api/v1/complaints/{id}/intervene`): reassign technician, escalate priority, add resources, override SLA.
-  - Audit logging in `assignment_history` and `case_status_history`.
+  - Manager Analytics REST API (`/api/v1/manager/analytics/*`):
+    - SLA compliance metrics (% within SLA, avg resolution time, breaches by category/team).
+    - Location hotspot heatmaps (top recurring complaint rooms, floors, blocks, hostels).
+    - Complaint category distribution and trend breakdown over time (daily/weekly/monthly).
+    - Technician and team performance benchmarks (completion count, SLA adherence, first-time fix rate).
+    - Recurring issue detection & preventive maintenance recommendations.
+  - CSV / PDF export generation for administrative facility reports.
+  - Comprehensive automated tests for analytics aggregations and manager endpoints.
