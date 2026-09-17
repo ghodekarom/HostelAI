@@ -12,10 +12,10 @@
 
 | Metric | Status / Value |
 |---|---|
-| **Current Phase** | Phase 3 — Core Backend API & Business Logic (Completed) |
-| **Current Active Branch** | `feature/phase-03-backend` |
-| **Completed Phases** | 3 / 10 |
-| **Overall Progress** | 30% |
+| **Current Phase** | Phase 5 — Authentication & Role-Based Access Control (RBAC) (Next Up) |
+| **Current Active Branch** | `dev` |
+| **Completed Phases** | 4 / 10 |
+| **Overall Progress** | 40% |
 | **Last Updated** | 2026-09-17 |
 
 ---

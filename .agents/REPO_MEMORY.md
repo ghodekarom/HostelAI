@@ -3,7 +3,7 @@
 **Project:** Hostel Facility Complaint Management System — AI Case Manager (HFCMS)  
 **Authoritative Specs:** PRD v1.3 & SRS v1.1  
 **Monorepo:** `backend/` (Spring Boot 3.3.4, Java 21) + `frontend/` (Flutter multiplatform)  
-**Last Updated:** 2026-09-17 (Phase 3 Completed & Live Verified)
+**Last Updated:** 2026-09-17 (Phase 4 Completed & SRS v1.1 Full Frontend Implemented)
 
 ---
 
@@ -13,10 +13,12 @@
 - **Remote Repository:** `https://github.com/ghodekarom/HostelAI.git`
 - **Published Remote Branches:**
   - `origin/main` (Production release branch)
-  - `origin/dev` (Active integration branch — Phase 1, 2, 3 merged)
+  - `origin/dev` (Active integration branch — Phase 1, 2, 3, 4 merged)
   - `origin/feature/phase-01-project-setup` (Visible on remote)
   - `origin/feature/phase-02-database` (Visible on remote)
   - `origin/feature/phase-03-backend` (Visible on remote)
+  - `origin/feature/phase-04-frontend` (Visible on remote)
+  - `origin/feature/phase-04-frontend-full` (Visible on remote)
 - **Branching Rules:**
   - Strict 3-tier: `feature/phase-XX-*` ➔ `dev` ➔ `main`.
   - Feature branches are never deleted from remote GitHub upon merging; keep them published.
@@ -24,7 +26,7 @@
 
 ---
 
-## 2. Completed Phases Summary (30% Complete)
+## 2. Completed Phases Summary (40% Complete)
 
 ### Phase 1: Project Setup & Monorepo Foundation
 - Monorepo directory structure: `backend/`, `frontend/`, `docs/`, `.github/workflows/ci.yml`.
@@ -51,22 +53,27 @@
 - **Security:** `SecurityConfig.java` permits Swagger UI and dev REST endpoints.
 - **DTOs:** Created `ChecklistResponse` DTO to prevent Hibernate ByteBuddy serialization errors.
 - **Admin APIs:** Added infrastructure endpoints (`POST /api/v1/admin/hostels`, `/blocks`, `/rooms`).
-- **Live 14-Step Lifecycle Verified:**
-  1. `POST /api/v1/admin/hostels` (Created Hostel 1)
-  2. `POST /api/v1/admin/blocks` (Created Block 1)
-  3. `POST /api/v1/admin/rooms` (Created Room 1)
-  4. `POST /api/v1/complaints` (Reported `HFCMS-2026-477AC4`)
-  5. `GET /api/v1/operator/queue` (Operator queue displayed case)
-  6. `POST /api/v1/complaints/1/review` (Operator review -> `OPERATOR_REVIEW`)
-  7. `POST /api/v1/complaints/1/missing-info/request` (Clarification -> `WAITING_FOR_INFORMATION`)
-  8. `POST /api/v1/complaints/1/missing-info/respond` (Student replied -> `ACTIVE`)
-  9. `POST /api/v1/complaints/1/assign` (Assigned technician Suresh Kumar -> `ASSIGNED`)
-  10. `GET /api/v1/complaints/1/checklist` (Retrieved diagnostic checklist)
-  11. `POST /api/v1/complaints/1/checklist/1/finding` (Logged finding -> `INVESTIGATED`)
-  12. `POST /api/v1/complaints/1/repair-actions` (Logged washer seal repair -> `ACTION_TAKEN`)
-  13. `POST /api/v1/complaints/1/resolution` (Proposed root cause resolution -> `RESOLUTION_PROPOSED`)
-  14. `POST /api/v1/complaints/1/resolution/decision` (Student confirmed -> `CONFIRMED` -> `CLOSED`)
-- **Swagger UI:** Verified operational in browser at `http://localhost:8080/swagger-ui/index.html`.
+- **Live 14-Step Lifecycle Verified via Swagger UI (`http://localhost:8080/swagger-ui/index.html`):**
+  Intake `REPORTED` ➔ Review `OPERATOR_REVIEW` ➔ Missing Info `WAITING_FOR_INFORMATION` ➔ Respond `ACTIVE` ➔ Assign `ASSIGNED` ➔ Checklist finding `INVESTIGATED` ➔ Repair action `ACTION_TAKEN` ➔ Resolution proposal `RESOLUTION_PROPOSED` ➔ Student decision `CONFIRMED`/`CLOSED`.
+
+### Phase 4: Flutter Frontend Architecture & Full SRS UI (Adhering to SRS v1.1)
+- **Feature-First Architecture (`frontend/lib/features/`):**
+  - `auth/`: `SignInScreen` (`/login`), `SignUpScreen` (`/signup`), `VerifyCodeScreen` (`/verify`), `PasswordResetScreen` (`/password-reset`) matching SRS §5.
+  - `complaints/`: `StudentDashboardScreen` (`/student`), `ComplaintFilingScreen` (`/student/new`), `ComplaintDetailScreen` (`/student/complaints/:id`), `MyComplaintsScreen`.
+  - `operator/`: `OperatorQueueScreen` (`/operator`), `OperatorTriageScreen` (`/operator/complaints/:id`) with AI review override, duplicate comparison (`pg_trgm`), technician assignment, and resolution proposing.
+  - `technician/`: `TechnicianTasksScreen` (`/technician`), `TechnicianTaskDetailScreen` (`/technician/complaints/:id`) with interactive diagnostic checklist findings (`INVESTIGATED`) and repair logging (`ACTION_TAKEN`).
+  - `team_lead/`: `TeamLeadAtRiskScreen` (`/team-lead`), `TeamLeadInterventionScreen` (`/team-lead/complaints/:id`) with SLA context, risk factors, and intervention execution (`REASSIGN_TECHNICIAN`, `BOOST_PRIORITY`, `ADD_RESOURCES`, `ESCALATE`).
+  - `manager/`: `ManagerAnalyticsScreen` (`/manager`) with MTTR, MTTA, SLA compliance, chronic hotspots, and 90-day recurring failure clustering matching SRS §8.7.
+  - `admin/`: `AdminDashboardScreen` (`/admin`) for campus hostels, blocks, rooms, categories with SLA, and maintenance teams.
+  - `notifications/`: `NotificationsScreen` (`/notifications`) with read/unread tracking and direct case navigation.
+  - `portal/`: `PortalHomeScreen` (`/`) with 6-persona launcher and system health status.
+- **Core Infrastructure & Design System:**
+  - `AppShell`: Responsive navigation (Desktop sidebar vs Mobile navigation bar) with dynamic active role switcher across all 6 SRS personas, and live notification unread counter badge.
+  - `AppTheme` & `AppColors`: Material 3 light and dark themes, status badges for all 14 statuses, `AiBadge`, `PriorityBadge` (P1-P4), `SeverityBadge`.
+  - `Dio` Network Layer: Custom `ApiException` with `fieldErrors` mapping and timeouts.
+  - `Riverpod` State Management: AsyncNotifiers and family providers for all domain layers.
+  - `SecureStorageService`: Encrypted JWT and refresh token persistence.
+  - Automated tests: `models_test.dart` and `widget_test.dart`.
 
 ---
 
@@ -82,16 +89,14 @@
 
 ---
 
-## 4. Next Phase to Implement: Phase 4
+## 4. Next Phase to Implement: Phase 5
 
-- **Phase 4 Name:** Flutter Frontend Architecture & Core UI
-- **Target Branch:** `feature/phase-04-frontend` (branched from `dev`)
+- **Phase 5 Name:** Authentication & Role-Based Access Control (RBAC)
+- **Target Branch:** `feature/phase-05-auth-rbac` (branched from `dev`)
 - **Core Scope:**
-  - Feature-first folder architecture in `frontend/lib/features/` (`complaints/`, `operator/`, `technician/`, `team_lead/`, `manager/`, `admin/`).
-  - State management (Riverpod), HTTP network layer (Dio with interceptors).
-  - Declarative routing (`go_router`) with role-aware routes.
-  - Student views: Dashboard, Filing form (category selection, photo picker), My Complaints, Case Detail timeline view, resolution confirmation/reopen dialog.
-  - Operator views: Triage queue, Review modal, Duplicate comparison view, Technician assignment, Resolution proposal form.
-  - Technician views: Assigned tasks queue, Checklist inspection, Repair action logging with photo upload.
-  - Responsive layouts (Web, Desktop, Mobile).
-  - Git flow: Commit ➔ Push `feature/phase-04-frontend` to `origin` ➔ Merge `--no-ff` into `dev` ➔ Push `dev` to `origin`.
+  - Backend Spring Security 6 filter chain with stateless JWT validation.
+  - BCrypt password hashing (strength 12).
+  - Auth REST endpoints: `signup`, `verify` (6-digit OTP email), `signin`, `refresh`, `logout`, `password-reset`.
+  - Method-level security annotations (`@PreAuthorize`) on all controller endpoints across all 6 roles.
+  - Frontend `AuthInterceptor` on Dio client: attach Bearer token, handle 401 Unauthorized with automatic token refresh, redirect to `/login` upon expiration.
+  - `GoRouter` authentication and RBAC navigation guards.
