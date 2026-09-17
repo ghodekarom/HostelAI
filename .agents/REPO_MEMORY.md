@@ -3,23 +3,24 @@
 **Project:** Hostel Facility Complaint Management System — AI Case Manager (HFCMS)  
 **Authoritative Specs:** PRD v1.3 & SRS v1.1  
 **Monorepo:** `backend/` (Spring Boot 3.3.4, Java 21) + `frontend/` (Flutter multiplatform)  
-**Last Updated:** 2026-09-17 (Phase 5 Authentication & RBAC Completed)
+**Last Updated:** 2026-09-17 (Phase 6 AI Complaint Analysis Pipeline Completed)
 
 ---
 
 ## 1. Active Git State & Remote Branches
 
-- **Active Local Branch:** `feature/phase-05-auth-rbac` (ready to merge into `dev`)
+- **Active Local Branch:** `feature/phase-06-ai-pipeline` (ready to merge into `dev`)
 - **Remote Repository:** `https://github.com/ghodekarom/HostelAI.git`
 - **Published Remote Branches:**
   - `origin/main` (Production release branch)
-  - `origin/dev` (Active integration branch — Phases 1-4 merged)
+  - `origin/dev` (Active integration branch — Phases 1-5 merged)
   - `origin/feature/phase-01-project-setup`
   - `origin/feature/phase-02-database`
   - `origin/feature/phase-03-backend`
   - `origin/feature/phase-04-frontend`
   - `origin/feature/phase-04-frontend-full`
   - `origin/feature/phase-04-multiplatform`
+  - `origin/feature/phase-05-auth-rbac`
 - **Branching Rules:**
   - Strict 3-tier: `feature/phase-XX-*` ➔ `dev` ➔ `main`.
   - Feature branches are never deleted from remote GitHub upon merging; keep them published.
@@ -27,7 +28,7 @@
 
 ---
 
-## 2. Completed Phases Summary (50% Complete)
+## 2. Completed Phases Summary (60% Complete)
 
 ### Phase 1: Project Setup & Monorepo Foundation
 - Monorepo directory structure: `backend/`, `frontend/`, `docs/`, `.github/workflows/ci.yml`.
@@ -60,28 +61,19 @@
 - Multiplatform native build harnesses for all 6 target OS: Android (SDK 34), iOS (CocoaPods/Xcode), Windows (Win32 CMake C++17), Linux (GTK 3.0 CMake), macOS (Cocoa Swift), Web (PWA).
 
 ### Phase 5: Authentication & Role-Based Access Control (RBAC) (SRS §5, §8.2, §9 FR-17)
-- **Backend Spring Security 6 Architecture:**
-  - Stateless JWT authentication filter (`JwtAuthenticationFilter`) with HMAC-SHA256 signing (JJWT 0.12.6).
-  - BCrypt password encoder configured with strength 12.
-  - Method-level security enabled (`@EnableMethodSecurity`) across all controllers (`@PreAuthorize("hasRole(...)")` / `hasAnyRole(...)`).
-  - Dynamic user identity resolution from `SecurityContextHolder` `UserPrincipal` with backward-compatible request header fallback.
-- **REST Auth Endpoints (`/api/v1/auth/*`):**
-  - `POST /signup`: Validates input, hashes password with BCrypt (12), creates user in `PENDING_VERIFICATION` status, dispatches 6-digit email OTP.
-  - `POST /verify`: Verifies active OTP code within 15-minute expiry, increments attempt counter, transitions status to `ACTIVE`, issues access/refresh tokens.
-  - `POST /resend-code`: Invalidates previous unverified OTPs and generates fresh 6-digit OTP.
-  - `POST /signin`: Authenticates credentials with BCrypt, enforces `ACTIVE` user check, issues 15-minute access token and 7-day refresh token.
-  - `POST /refresh`: Performs rotating refresh token validation, hashes token with SHA-256, revokes previous token, and issues fresh token pair.
-  - `POST /password-reset/request`: Generates `PASSWORD_RESET` OTP.
-  - `POST /password-reset/confirm`: Verifies reset OTP, updates BCrypt password hash, and revokes all active refresh tokens for the user.
-  - `POST /logout`: Revokes user's active refresh tokens.
-- **Backend Test Suite (100% Pass Rate):**
-  - `AuthServiceTest` (9 tests): Signup, duplicate email, OTP verification, invalid code attempts, signin, token rotation, logout.
-  - `JwtTokenProviderTest` (2 tests): Token generation, claim validation, signature tampering rejection.
-  - `SecurityRbacIntegrationTest` (4 tests): Unauthenticated access rejection (403), public auth endpoint access (400), cross-role access rejection (`ROLE_STUDENT` accessing operator queue -> 403), authorized access allowance (`ROLE_OPERATOR` -> 200).
-- **Frontend Security Integration:**
-  - `ApiClient`: Dio `AuthInterceptor` injecting Bearer token for all non-auth endpoints.
-  - Automatic 401 Interception: Dispatches `/auth/refresh` on 401 errors, saves rotated tokens in `SecureStorageService`, and retries the original request transparently.
-  - `AuthRepository` & `AuthProvider`: Unwraps `ApiException` field and message details, synchronizes active persona with `roleProvider`, and auto-initializes auth state via `checkAuth()`.
+- **Backend Spring Security 6 Architecture:** Stateless JWT authentication filter (`JwtAuthenticationFilter`), BCrypt password encoder (strength 12), method-level `@PreAuthorize` across controllers.
+- **REST Auth Endpoints (`/api/v1/auth/*`):** Signup, OTP verify, OTP resend, signin, token rotation refresh, password reset request/confirm, logout.
+- **Frontend Security:** Dio `AuthInterceptor` injecting Bearer token, automatic 401 token rotation and retry, persistent secure storage session management.
+
+### Phase 6: AI Complaint Analysis Pipeline (SRS §8.4, §9 FR-2, FR-3, FR-7, FR-18)
+- **Multi-Provider AI Architecture:** Extensible `AiClient` interface with implementations for Google Gemini 1.5 Flash (`GeminiAiClient`), Anthropic Claude 3.5 Sonnet (`AnthropicAiClient`), and deterministic local fallback (`RuleBasedMockAiClient`).
+- **Automated Triage Pipeline:** Automatic complaint understanding upon submission — categorizes issues, assesses severity (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`), assigns priority (`P1`–`P4`), computes SLA deadlines, suggests maintenance team, generates concise AI summary, and identifies missing information.
+- **Duplicate & Related Case Linking:** Uses PostgreSQL `pg_trgm` GIN index similarity search (`similarity >= 0.3`) to automatically identify related cases and link them in `complaint_related_cases` with `PENDING_REVIEW` status.
+- **Dynamic Diagnostic Checklists:** Generates domain-tailored investigation checklists and checklist items (`investigation_checklists`, `checklist_items`) based on inferred category.
+- **Lifecycle Automation:** Automatically progresses status: `REPORTED` ➔ `UNDERSTOOD` ➔ `RELATED_CASES_CHECKED` ➔ `OPERATOR_REVIEW`.
+- **Inference Audit Logging & Resilience:** Logs latency, model name, status, and raw prompts/responses in `ai_analysis_log`. Adheres to non-blocking AI design (FR-18.1): complaint filing never fails if AI is unreachable.
+- **Operator On-Demand Re-Analysis:** Exposes `POST /api/v1/complaints/{id}/ai/analyze` for manual AI re-triggering.
+- **100% Test Coverage:** 25/25 backend tests passing across all suites.
 
 ---
 
@@ -97,13 +89,12 @@
 
 ---
 
-## 4. Next Phase to Implement: Phase 6
+## 4. Next Phase to Implement: Phase 7
 
-- **Phase 6 Name:** AI Complaint Analysis Pipeline
-- **Target Branch:** `feature/phase-06-ai-pipeline` (to be branched from `dev`)
+- **Phase 7 Name:** Notifications & Real-Time Updates
+- **Target Branch:** `feature/phase-07-notifications` (to be branched from `dev`)
 - **Core Scope:**
-  - Google Gemini 1.5 Flash integration via Google GenAI SDK.
-  - Complaint analysis pipeline: Category classification, Subcategory detection, Severity scoring (LOW, MEDIUM, HIGH, CRITICAL), Priority assignment (P1-P4), SLA deadline calculation, Maintenance team suggestion, Diagnostic checklist generation.
-  - Duplicate & related cases detection via PostgreSQL `pg_trgm` similarity queries (`similarity(description, ?) > 0.3`).
-  - Fallback deterministic rule engine for offline/resilience scenarios.
-  - AI analysis logging into `ai_analysis_log` table for auditability.
+  - In-app notification service and WebSocket/SSE real-time event dispatcher.
+  - Transactional email dispatch via JavaMailSender / Mailpit for critical lifecycle events (status change, technician assigned, resolution proposed).
+  - Notification preference management and unread count badges.
+  - Frontend notification center integration and live toast alerts.

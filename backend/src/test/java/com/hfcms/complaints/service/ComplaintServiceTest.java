@@ -57,6 +57,8 @@ class ComplaintServiceTest {
     private RoomRepository roomRepository;
     @Mock
     private CategoryRepository categoryRepository;
+    @Mock
+    private com.hfcms.ai.service.AiComplaintService aiComplaintService;
 
     @InjectMocks
     private ComplaintService complaintService;
@@ -95,17 +97,28 @@ class ComplaintServiceTest {
             return c;
         });
 
+        when(aiComplaintService.processComplaint(100L)).thenReturn(
+                ComplaintResponse.builder()
+                        .id(100L)
+                        .caseNumber("HFCMS-2026-123456")
+                        .status(ComplaintStatus.OPERATOR_REVIEW)
+                        .priority(Priority.P3)
+                        .severity(Severity.MEDIUM)
+                        .slaDeadline(java.time.Instant.now())
+                        .build()
+        );
+
         ComplaintResponse response = complaintService.createComplaint(request, 1L);
 
         assertNotNull(response);
         assertEquals(100L, response.getId());
         assertTrue(response.getCaseNumber().startsWith("HFCMS-"));
-        assertEquals(ComplaintStatus.REPORTED, response.getStatus());
+        assertEquals(ComplaintStatus.OPERATOR_REVIEW, response.getStatus());
         assertEquals(Priority.P3, response.getPriority());
         assertEquals(Severity.MEDIUM, response.getSeverity());
         assertNotNull(response.getSlaDeadline());
 
         verify(statusHistoryRepository, times(1)).save(any());
-        verify(complaintRepository, times(2)).save(any());
+        verify(aiComplaintService, times(1)).processComplaint(100L);
     }
 }
