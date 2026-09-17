@@ -3,23 +3,23 @@
 **Project:** Hostel Facility Complaint Management System — AI Case Manager (HFCMS)  
 **Authoritative Specs:** PRD v1.3 & SRS v1.1  
 **Monorepo:** `backend/` (Spring Boot 3.3.4, Java 21) + `frontend/` (Flutter multiplatform)  
-**Last Updated:** 2026-09-17 (Phase 4 Completed & SRS v1.1 Full Frontend Implemented)
+**Last Updated:** 2026-09-17 (Phase 5 Authentication & RBAC Completed)
 
 ---
 
 ## 1. Active Git State & Remote Branches
 
-- **Active Local Branch:** `dev` (clean working tree, in sync with `origin/dev`)
+- **Active Local Branch:** `feature/phase-05-auth-rbac` (ready to merge into `dev`)
 - **Remote Repository:** `https://github.com/ghodekarom/HostelAI.git`
 - **Published Remote Branches:**
   - `origin/main` (Production release branch)
-  - `origin/dev` (Active integration branch — Phase 1, 2, 3, 4 merged)
-  - `origin/feature/phase-01-project-setup` (Visible on remote)
-  - `origin/feature/phase-02-database` (Visible on remote)
-  - `origin/feature/phase-03-backend` (Visible on remote)
-  - `origin/feature/phase-04-frontend` (Visible on remote)
-  - `origin/feature/phase-04-frontend-full` (Visible on remote)
-  - `origin/feature/phase-04-multiplatform` (Visible on remote - Android, iOS, Windows, Linux, macOS)
+  - `origin/dev` (Active integration branch — Phases 1-4 merged)
+  - `origin/feature/phase-01-project-setup`
+  - `origin/feature/phase-02-database`
+  - `origin/feature/phase-03-backend`
+  - `origin/feature/phase-04-frontend`
+  - `origin/feature/phase-04-frontend-full`
+  - `origin/feature/phase-04-multiplatform`
 - **Branching Rules:**
   - Strict 3-tier: `feature/phase-XX-*` ➔ `dev` ➔ `main`.
   - Feature branches are never deleted from remote GitHub upon merging; keep them published.
@@ -27,7 +27,7 @@
 
 ---
 
-## 2. Completed Phases Summary (40% Complete)
+## 2. Completed Phases Summary (50% Complete)
 
 ### Phase 1: Project Setup & Monorepo Foundation
 - Monorepo directory structure: `backend/`, `frontend/`, `docs/`, `.github/workflows/ci.yml`.
@@ -48,41 +48,40 @@
   - `V7__seed_reference_data.sql` (6 roles, 6 maintenance teams, 10 complaint categories matching PRD §9)
 
 ### Phase 3: Core Backend REST API & Business Logic (Verified on Live DB)
-- **Database Initialized:** Local PostgreSQL 18 database `hfcms` created with user `postgres` and password `password`.
-- **Automatic .env Loader:** `HfcmsApplication.java` reads `backend/.env` on startup.
-- **Hibernate Fix:** Mapped PostgreSQL `jsonb` column `risk_reasons` with `@JdbcTypeCode(SqlTypes.JSON)`.
-- **Security:** `SecurityConfig.java` permits Swagger UI and dev REST endpoints.
-- **DTOs:** Created `ChecklistResponse` DTO to prevent Hibernate ByteBuddy serialization errors.
-- **Admin APIs:** Added infrastructure endpoints (`POST /api/v1/admin/hostels`, `/blocks`, `/rooms`).
-- **Live 14-Step Lifecycle Verified via Swagger UI (`http://localhost:8080/swagger-ui/index.html`):**
-  Intake `REPORTED` ➔ Review `OPERATOR_REVIEW` ➔ Missing Info `WAITING_FOR_INFORMATION` ➔ Respond `ACTIVE` ➔ Assign `ASSIGNED` ➔ Checklist finding `INVESTIGATED` ➔ Repair action `ACTION_TAKEN` ➔ Resolution proposal `RESOLUTION_PROPOSED` ➔ Student decision `CONFIRMED`/`CLOSED`.
+- Local PostgreSQL 18 database `hfcms` created with user `postgres` and password `password`.
+- Automatic .env loader in `HfcmsApplication.java`.
+- Hibernate JSON mapping with `@JdbcTypeCode(SqlTypes.JSON)`.
+- Centralized exception handling with RFC 7807 problem details.
+- Full 14-step complaint lifecycle verified via Swagger UI.
 
 ### Phase 4: Flutter Frontend Architecture & Full SRS UI (Adhering to SRS v1.1)
-- **Feature-First Architecture (`frontend/lib/features/`):**
-  - `auth/`: `SignInScreen` (`/login`), `SignUpScreen` (`/signup`), `VerifyCodeScreen` (`/verify`), `PasswordResetScreen` (`/password-reset`) matching SRS §5.
-  - `complaints/`: `StudentDashboardScreen` (`/student`), `ComplaintFilingScreen` (`/student/new`), `ComplaintDetailScreen` (`/student/complaints/:id`), `MyComplaintsScreen`.
-  - `operator/`: `OperatorQueueScreen` (`/operator`), `OperatorTriageScreen` (`/operator/complaints/:id`) with AI review override, duplicate comparison (`pg_trgm`), technician assignment, and resolution proposing.
-  - `technician/`: `TechnicianTasksScreen` (`/technician`), `TechnicianTaskDetailScreen` (`/technician/complaints/:id`) with interactive diagnostic checklist findings (`INVESTIGATED`) and repair logging (`ACTION_TAKEN`).
-  - `team_lead/`: `TeamLeadAtRiskScreen` (`/team-lead`), `TeamLeadInterventionScreen` (`/team-lead/complaints/:id`) with SLA context, risk factors, and intervention execution (`REASSIGN_TECHNICIAN`, `BOOST_PRIORITY`, `ADD_RESOURCES`, `ESCALATE`).
-  - `manager/`: `ManagerAnalyticsScreen` (`/manager`) with MTTR, MTTA, SLA compliance, chronic hotspots, and 90-day recurring failure clustering matching SRS §8.7.
-  - `admin/`: `AdminDashboardScreen` (`/admin`) for campus hostels, blocks, rooms, categories with SLA, and maintenance teams.
-  - `notifications/`: `NotificationsScreen` (`/notifications`) with read/unread tracking and direct case navigation.
-  - `portal/`: `PortalHomeScreen` (`/`) with 6-persona launcher and system health status.
-- **Core Infrastructure & Design System:**
-  - `AppShell`: Responsive navigation (Desktop sidebar vs Mobile navigation bar) with dynamic active role switcher across all 6 SRS personas, and live notification unread counter badge.
-  - `AppTheme` & `AppColors`: Material 3 light and dark themes, status badges for all 14 statuses, `AiBadge`, `PriorityBadge` (P1-P4), `SeverityBadge`.
-  - `Dio` Network Layer: Custom `ApiException` with `fieldErrors` mapping and timeouts.
-  - `Riverpod` State Management: AsyncNotifiers and family providers for all domain layers.
-  - `SecureStorageService`: Encrypted JWT and refresh token persistence.
-  - Automated tests: `models_test.dart` and `widget_test.dart`.
-- **Multiplatform Scaffolding Adhering to SRS §1.3 & §6.2:**
-  - **Android (`frontend/android/`):** Root & app Gradle 8 build scripts, AndroidX, `MainActivity.kt`, `AndroidManifest.xml` with camera & storage permissions.
-  - **iOS (`frontend/ios/`):** Podfile (iOS 13+), Xcode project (`project.pbxproj`), `AppDelegate.swift`, `Info.plist` with camera/photo library usage descriptions, LaunchScreen & Main storyboards.
-  - **Windows Desktop (`frontend/windows/`):** CMake build system, Win32 C++ runner (`main.cpp`, `flutter_window.cpp`, `win32_window.cpp`), DPI awareness manifest, resources (`Runner.rc`).
-  - **Linux Desktop (`frontend/linux/`):** CMake build system, GTK 3.0 C++ runner (`main.cc`, `my_application.cc`), window configuration.
-  - **macOS Desktop (`frontend/macos/`):** Podfile, Xcode project, AppKit Cocoa Swift runner (`AppDelegate.swift`, `MainFlutterWindow.swift`), AppInfo xcconfigs, MainMenu nib.
-  - **Web Client (`frontend/web/`):** `index.html`, PWA `manifest.json`.
-  - **Cross-Platform Adaptations:** `PlatformUtils` runtime detection, `HfcmsScrollBehavior` for mouse/touch/stylus drag across all devices, mobile `SafeArea` integration in `AppShell`.
+- Feature-First Architecture (`frontend/lib/features/`): `auth/`, `complaints/`, `operator/`, `technician/`, `team_lead/`, `manager/`, `admin/`, `notifications/`, `portal/`.
+- Global responsive shell (`AppShell`) adapting between Desktop sidebar and Mobile navigation bar.
+- Multiplatform native build harnesses for all 6 target OS: Android (SDK 34), iOS (CocoaPods/Xcode), Windows (Win32 CMake C++17), Linux (GTK 3.0 CMake), macOS (Cocoa Swift), Web (PWA).
+
+### Phase 5: Authentication & Role-Based Access Control (RBAC) (SRS §5, §8.2, §9 FR-17)
+- **Backend Spring Security 6 Architecture:**
+  - Stateless JWT authentication filter (`JwtAuthenticationFilter`) with HMAC-SHA256 signing (JJWT 0.12.6).
+  - BCrypt password encoder configured with strength 12.
+  - Method-level security enabled (`@EnableMethodSecurity`) across all controllers (`@PreAuthorize("hasRole(...)")` / `hasAnyRole(...)`).
+  - Dynamic user identity resolution from `SecurityContextHolder` `UserPrincipal` with backward-compatible request header fallback.
+- **REST Auth Endpoints (`/api/v1/auth/*`):**
+  - `POST /signup`: Validates input, hashes password with BCrypt (12), creates user in `PENDING_VERIFICATION` status, dispatches 6-digit email OTP.
+  - `POST /verify`: Verifies active OTP code within 15-minute expiry, increments attempt counter, transitions status to `ACTIVE`, issues access/refresh tokens.
+  - `POST /resend-code`: Invalidates previous unverified OTPs and generates fresh 6-digit OTP.
+  - `POST /signin`: Authenticates credentials with BCrypt, enforces `ACTIVE` user check, issues 15-minute access token and 7-day refresh token.
+  - `POST /refresh`: Performs rotating refresh token validation, hashes token with SHA-256, revokes previous token, and issues fresh token pair.
+  - `POST /password-reset/request`: Generates `PASSWORD_RESET` OTP.
+  - `POST /password-reset/confirm`: Verifies reset OTP, updates BCrypt password hash, and revokes all active refresh tokens for the user.
+  - `POST /logout`: Revokes user's active refresh tokens.
+- **Backend Test Suite (100% Pass Rate):**
+  - `AuthServiceTest` (9 tests): Signup, duplicate email, OTP verification, invalid code attempts, signin, token rotation, logout.
+  - `JwtTokenProviderTest` (2 tests): Token generation, claim validation, signature tampering rejection.
+  - `SecurityRbacIntegrationTest` (4 tests): Unauthenticated access rejection (403), public auth endpoint access (400), cross-role access rejection (`ROLE_STUDENT` accessing operator queue -> 403), authorized access allowance (`ROLE_OPERATOR` -> 200).
+- **Frontend Security Integration:**
+  - `ApiClient`: Dio `AuthInterceptor` injecting Bearer token for all non-auth endpoints.
+  - Automatic 401 Interception: Dispatches `/auth/refresh` on 401 errors, saves rotated tokens in `SecureStorageService`, and retries the original request transparently.
+  - `AuthRepository` & `AuthProvider`: Unwraps `ApiException` field and message details, synchronizes active persona with `roleProvider`, and auto-initializes auth state via `checkAuth()`.
 
 ---
 
@@ -98,14 +97,13 @@
 
 ---
 
-## 4. Next Phase to Implement: Phase 5
+## 4. Next Phase to Implement: Phase 6
 
-- **Phase 5 Name:** Authentication & Role-Based Access Control (RBAC)
-- **Target Branch:** `feature/phase-05-auth-rbac` (branched from `dev`)
+- **Phase 6 Name:** AI Complaint Analysis Pipeline
+- **Target Branch:** `feature/phase-06-ai-pipeline` (to be branched from `dev`)
 - **Core Scope:**
-  - Backend Spring Security 6 filter chain with stateless JWT validation.
-  - BCrypt password hashing (strength 12).
-  - Auth REST endpoints: `signup`, `verify` (6-digit OTP email), `signin`, `refresh`, `logout`, `password-reset`.
-  - Method-level security annotations (`@PreAuthorize`) on all controller endpoints across all 6 roles.
-  - Frontend `AuthInterceptor` on Dio client: attach Bearer token, handle 401 Unauthorized with automatic token refresh, redirect to `/login` upon expiration.
-  - `GoRouter` authentication and RBAC navigation guards.
+  - Google Gemini 1.5 Flash integration via Google GenAI SDK.
+  - Complaint analysis pipeline: Category classification, Subcategory detection, Severity scoring (LOW, MEDIUM, HIGH, CRITICAL), Priority assignment (P1-P4), SLA deadline calculation, Maintenance team suggestion, Diagnostic checklist generation.
+  - Duplicate & related cases detection via PostgreSQL `pg_trgm` similarity queries (`similarity(description, ?) > 0.3`).
+  - Fallback deterministic rule engine for offline/resilience scenarios.
+  - AI analysis logging into `ai_analysis_log` table for auditability.

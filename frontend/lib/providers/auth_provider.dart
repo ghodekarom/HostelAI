@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/auth_models.dart';
 import 'api_providers.dart';
+import 'role_provider.dart';
 
 class AuthState {
   final bool isAuthenticated;
@@ -37,7 +38,46 @@ class AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   final Ref ref;
 
-  AuthNotifier(this.ref) : super(AuthState());
+  AuthNotifier(this.ref) : super(AuthState()) {
+    checkAuth();
+  }
+
+  UserRole _mapRole(String? roleStr) {
+    if (roleStr == null) return UserRole.student;
+    switch (roleStr.toUpperCase().replaceAll('ROLE_', '')) {
+      case 'OPERATOR':
+        return UserRole.operator;
+      case 'TECHNICIAN':
+        return UserRole.technician;
+      case 'TEAM_LEAD':
+        return UserRole.teamLead;
+      case 'MANAGER':
+        return UserRole.manager;
+      case 'ADMIN':
+        return UserRole.admin;
+      case 'STUDENT':
+      default:
+        return UserRole.student;
+    }
+  }
+
+  Future<void> checkAuth() async {
+    try {
+      final storage = ref.read(secureStorageProvider);
+      final token = await storage.getAccessToken();
+      final email = await storage.getUserEmail();
+      final role = await storage.getUserRole();
+
+      if (token != null && token.isNotEmpty && email != null) {
+        state = state.copyWith(
+          isAuthenticated: true,
+          email: email,
+          role: role,
+        );
+        ref.read(roleProvider.notifier).setRole(_mapRole(role));
+      }
+    } catch (_) {}
+  }
 
   Future<void> signIn(String email, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
@@ -50,6 +90,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         email: res.email,
         role: res.role,
       );
+      ref.read(roleProvider.notifier).setRole(_mapRole(res.role));
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
@@ -77,6 +118,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         email: res.email,
         role: res.role,
       );
+      ref.read(roleProvider.notifier).setRole(_mapRole(res.role));
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }

@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import '../core/network/api_client.dart';
 import '../core/network/api_endpoints.dart';
+import '../core/network/api_exception.dart';
 import '../core/storage/secure_storage.dart';
 import '../models/auth_models.dart';
 
@@ -20,18 +22,24 @@ class AuthRepository {
       await storage.saveTokens(accessToken: auth.accessToken, refreshToken: auth.refreshToken);
       await storage.saveUserData(email: auth.email, role: auth.role);
       return auth;
-    } catch (e) {
-      // Mock auth fallback for development / offline
-      final mock = AuthResponse(
-        accessToken: 'mock_jwt_access_token_${DateTime.now().millisecondsSinceEpoch}',
-        refreshToken: 'mock_jwt_refresh_token',
-        email: email,
-        fullName: email.split('@').first.toUpperCase(),
-        role: 'STUDENT',
-      );
-      await storage.saveTokens(accessToken: mock.accessToken, refreshToken: mock.refreshToken);
-      await storage.saveUserData(email: mock.email, role: mock.role);
-      return mock;
+    } on DioException catch (e) {
+      if (e.error is ApiException) {
+        throw (e.error as ApiException).message;
+      }
+      if (e.type == DioExceptionType.connectionError || e.type == DioExceptionType.connectionTimeout) {
+        // Fallback for offline demo mode
+        final mock = AuthResponse(
+          accessToken: 'mock_jwt_access_token_${DateTime.now().millisecondsSinceEpoch}',
+          refreshToken: 'mock_jwt_refresh_token',
+          email: email,
+          fullName: email.split('@').first.toUpperCase(),
+          role: 'STUDENT',
+        );
+        await storage.saveTokens(accessToken: mock.accessToken, refreshToken: mock.refreshToken);
+        await storage.saveUserData(email: mock.email, role: mock.role);
+        return mock;
+      }
+      throw e.message ?? 'Authentication failed';
     }
   }
 
@@ -46,7 +54,12 @@ class AuthRepository {
           'role': role,
         },
       );
-    } catch (_) {}
+    } on DioException catch (e) {
+      if (e.error is ApiException) {
+        throw (e.error as ApiException).message;
+      }
+      throw e.message ?? 'Sign up failed';
+    }
   }
 
   Future<AuthResponse> verifyCode(String email, String code) async {
@@ -58,16 +71,23 @@ class AuthRepository {
       final data = res.data['data'] as Map<String, dynamic>;
       final auth = AuthResponse.fromJson(data);
       await storage.saveTokens(accessToken: auth.accessToken, refreshToken: auth.refreshToken);
+      await storage.saveUserData(email: auth.email, role: auth.role);
       return auth;
-    } catch (e) {
-      final mock = AuthResponse(
-        accessToken: 'mock_verified_token',
-        refreshToken: 'mock_refresh',
-        email: email,
-        role: 'STUDENT',
-      );
-      await storage.saveTokens(accessToken: mock.accessToken, refreshToken: mock.refreshToken);
-      return mock;
+    } on DioException catch (e) {
+      if (e.error is ApiException) {
+        throw (e.error as ApiException).message;
+      }
+      if (e.type == DioExceptionType.connectionError || e.type == DioExceptionType.connectionTimeout) {
+        final mock = AuthResponse(
+          accessToken: 'mock_verified_token',
+          refreshToken: 'mock_refresh',
+          email: email,
+          role: 'STUDENT',
+        );
+        await storage.saveTokens(accessToken: mock.accessToken, refreshToken: mock.refreshToken);
+        return mock;
+      }
+      throw e.message ?? 'Verification failed';
     }
   }
 
@@ -77,7 +97,12 @@ class AuthRepository {
         ApiEndpoints.resendCode,
         data: {'email': email},
       );
-    } catch (_) {}
+    } on DioException catch (e) {
+      if (e.error is ApiException) {
+        throw (e.error as ApiException).message;
+      }
+      throw e.message ?? 'Failed to resend code';
+    }
   }
 
   Future<void> requestPasswordReset(String email) async {
@@ -86,7 +111,12 @@ class AuthRepository {
         ApiEndpoints.passwordResetRequest,
         data: {'email': email},
       );
-    } catch (_) {}
+    } on DioException catch (e) {
+      if (e.error is ApiException) {
+        throw (e.error as ApiException).message;
+      }
+      throw e.message ?? 'Password reset request failed';
+    }
   }
 
   Future<void> confirmPasswordReset(String email, String code, String newPassword) async {
@@ -99,7 +129,12 @@ class AuthRepository {
           'newPassword': newPassword,
         },
       );
-    } catch (_) {}
+    } on DioException catch (e) {
+      if (e.error is ApiException) {
+        throw (e.error as ApiException).message;
+      }
+      throw e.message ?? 'Password reset confirmation failed';
+    }
   }
 
   Future<void> logout() async {
