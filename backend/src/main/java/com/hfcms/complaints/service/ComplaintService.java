@@ -1,5 +1,6 @@
 package com.hfcms.complaints.service;
 
+import com.hfcms.ai.service.AiComplaintService;
 import com.hfcms.categories.entity.Category;
 import com.hfcms.categories.repository.CategoryRepository;
 import com.hfcms.common.exception.ResourceNotFoundException;
@@ -54,6 +55,7 @@ public class ComplaintService {
     private final BlockRepository blockRepository;
     private final RoomRepository roomRepository;
     private final CategoryRepository categoryRepository;
+    private final AiComplaintService aiComplaintService;
 
     @Transactional
     public ComplaintResponse createComplaint(CreateComplaintRequest request, Long studentId) {
@@ -121,7 +123,15 @@ public class ComplaintService {
         }
 
         logger.info("New complaint created with case number: {}", caseNumber);
-        return ComplaintMapper.toResponse(savedComplaint);
+
+        // Execute automated AI Case Understanding & Triage pipeline
+        try {
+            return aiComplaintService.processComplaint(savedComplaint.getId());
+        } catch (Exception ex) {
+            logger.warn("Automated AI triage for complaint {} deferred: {}. Initial status preserved as REPORTED.",
+                    caseNumber, ex.getMessage());
+            return ComplaintMapper.toResponse(savedComplaint);
+        }
     }
 
     @Transactional(readOnly = true)
