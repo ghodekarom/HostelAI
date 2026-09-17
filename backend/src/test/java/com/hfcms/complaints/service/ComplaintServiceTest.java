@@ -59,6 +59,8 @@ class ComplaintServiceTest {
     private CategoryRepository categoryRepository;
     @Mock
     private com.hfcms.ai.service.AiComplaintService aiComplaintService;
+    @Mock
+    private com.hfcms.notifications.service.NotificationService notificationService;
 
     @InjectMocks
     private ComplaintService complaintService;

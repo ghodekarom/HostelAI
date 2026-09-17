@@ -4,7 +4,7 @@ class NotificationModel {
   final String title;
   final String message;
   final String type;
-  final int? referenceId;
+  final String? referenceId;
   final bool isRead;
   final DateTime createdAt;
 
@@ -22,11 +22,11 @@ class NotificationModel {
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
       id: json['id'] is num ? (json['id'] as num).toInt() : int.tryParse(json['id']?.toString() ?? '0') ?? 0,
-      userId: json['userId'] != null ? (json['userId'] as num).toInt() : null,
+      userId: json['userId'] != null ? (json['userId'] is num ? (json['userId'] as num).toInt() : int.tryParse(json['userId'].toString())) : null,
       title: json['title']?.toString() ?? 'Notification',
       message: json['message']?.toString() ?? '',
       type: json['type']?.toString() ?? 'SYSTEM',
-      referenceId: json['referenceId'] != null ? (json['referenceId'] as num).toInt() : null,
+      referenceId: json['referenceId']?.toString(),
       isRead: json['isRead'] == true,
       createdAt: json['createdAt'] != null
           ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now())

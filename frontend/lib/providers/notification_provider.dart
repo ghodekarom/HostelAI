@@ -22,6 +22,12 @@ class NotificationNotifier extends AsyncNotifier<List<NotificationModel>> {
     await repo.markAsRead(id);
     await refresh();
   }
+
+  Future<void> markAllAsRead() async {
+    final repo = ref.read(notificationRepositoryProvider);
+    await repo.markAllAsRead();
+    await refresh();
+  }
 }
 
 final notificationsProvider = AsyncNotifierProvider<NotificationNotifier, List<NotificationModel>>(() {

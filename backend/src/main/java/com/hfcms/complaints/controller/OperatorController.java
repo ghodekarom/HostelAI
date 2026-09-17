@@ -28,6 +28,9 @@ public class OperatorController {
     private final OperatorService operatorService;
     private final MissingInfoService missingInfoService;
     private final ResolutionService resolutionService;
+    private final com.hfcms.complaints.service.ComplaintService complaintService;
+    private final com.hfcms.teams.repository.TechnicianRepository technicianRepository;
+    private final com.hfcms.notifications.service.NotificationService notificationService;
 
     private Long resolveUserId(Long headerId) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
@@ -93,6 +96,35 @@ public class OperatorController {
 
         Long resolvedOperatorId = resolveUserId(operatorId);
         ComplaintResponse response = operatorService.assignComplaint(id, request, resolvedOperatorId);
+
+        try {
+            if (response.getStudentId() != null) {
+                notificationService.sendNotification(
+                        response.getStudentId(),
+                        "Technician Assigned: " + response.getCaseNumber(),
+                        "Your complaint has been assigned to " + (response.getAssignedTeamName() != null ? response.getAssignedTeamName() : "Maintenance Team") +
+                                (response.getAssignedTechnicianName() != null ? " (Technician: " + response.getAssignedTechnicianName() + ")" : "") + ".",
+                        "ASSIGNED",
+                        response.getCaseNumber(),
+                        true
+                );
+            }
+            if (request.getTechnicianId() != null) {
+                technicianRepository.findById(request.getTechnicianId()).ifPresent(tech -> {
+                    if (tech.getUser() != null) {
+                        notificationService.sendNotification(
+                                tech.getUser().getId(),
+                                "New Task Assigned: " + response.getCaseNumber(),
+                                "You have been assigned to complaint " + response.getCaseNumber() + " at " + response.getHostelName() + " (" + response.getBlockName() + ").",
+                                "ASSIGNED",
+                                response.getCaseNumber(),
+                                false
+                        );
+                    }
+                });
+            }
+        } catch (Exception ignored) {}
+
         return ResponseEntity.ok(ApiResponse.success("Complaint assigned successfully", response));
     }
 
@@ -106,6 +138,21 @@ public class OperatorController {
 
         Long resolvedOperatorId = resolveUserId(operatorId);
         missingInfoService.requestMissingInfo(id, request, resolvedOperatorId);
+
+        try {
+            ComplaintResponse c = complaintService.getComplaintById(id);
+            if (c.getStudentId() != null) {
+                notificationService.sendNotification(
+                        c.getStudentId(),
+                        "Action Required: Clarification Requested",
+                        "Operator requested information for case " + c.getCaseNumber() + ": " + request.getQuestions(),
+                        "ACTION_REQUIRED",
+                        c.getCaseNumber(),
+                        true
+                );
+            }
+        } catch (Exception ignored) {}
+
         return ResponseEntity.ok(ApiResponse.success("Missing information request dispatched to student", null));
     }
 
@@ -119,6 +166,21 @@ public class OperatorController {
 
         Long resolvedOperatorId = resolveUserId(operatorId);
         resolutionService.proposeResolution(id, request, resolvedOperatorId);
+
+        try {
+            ComplaintResponse c = complaintService.getComplaintById(id);
+            if (c.getStudentId() != null) {
+                notificationService.sendNotification(
+                        c.getStudentId(),
+                        "Resolution Proposed: " + c.getCaseNumber(),
+                        "Resolution proposed for case " + c.getCaseNumber() + ": " + request.getResultSummary() + ". Please confirm or report further issues.",
+                        "RESOLUTION_PROPOSED",
+                        c.getCaseNumber(),
+                        true
+                );
+            }
+        } catch (Exception ignored) {}
+
         return ResponseEntity.ok(ApiResponse.success("Resolution proposed successfully. Pending student confirmation.", null));
     }
 }

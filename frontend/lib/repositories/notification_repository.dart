@@ -13,7 +13,7 @@ class NotificationRepository {
       title: 'Action Required: Clarification Requested',
       message: 'Operator requested clarification on your complaint HFCMS-2026-477AC4.',
       type: 'ACTION_REQUIRED',
-      referenceId: 1,
+      referenceId: 'HFCMS-2026-477AC4',
       isRead: false,
       createdAt: DateTime.now().subtract(const Duration(hours: 1)),
     ),
@@ -22,7 +22,7 @@ class NotificationRepository {
       title: 'Technician Assigned',
       message: 'Technician Suresh Kumar has been dispatched for your complaint HFCMS-2026-477AC4.',
       type: 'ASSIGNED',
-      referenceId: 1,
+      referenceId: 'HFCMS-2026-477AC4',
       isRead: false,
       createdAt: DateTime.now().subtract(const Duration(hours: 3)),
     ),
@@ -31,7 +31,7 @@ class NotificationRepository {
       title: 'Complaint Registered',
       message: 'Your complaint HFCMS-2026-477AC4 has been filed and queued for review.',
       type: 'COMPLAINT_FILED',
-      referenceId: 1,
+      referenceId: 'HFCMS-2026-477AC4',
       isRead: true,
       createdAt: DateTime.now().subtract(const Duration(hours: 6)),
     ),
@@ -50,6 +50,21 @@ class NotificationRepository {
     }
   }
 
+  Future<int> getUnreadCount() async {
+    try {
+      final res = await apiClient.dio.get('/notifications/unread-count');
+      if (res.data != null && res.data['data'] != null) {
+        final data = res.data['data'];
+        if (data is Map && data['unreadCount'] != null) {
+          return (data['unreadCount'] as num).toInt();
+        }
+      }
+      return _mockNotifications.where((n) => !n.isRead).length;
+    } catch (_) {
+      return _mockNotifications.where((n) => !n.isRead).length;
+    }
+  }
+
   Future<void> markAsRead(int id) async {
     try {
       await apiClient.dio.post(ApiEndpoints.markNotificationRead(id));
@@ -58,6 +73,24 @@ class NotificationRepository {
     if (idx != -1) {
       final n = _mockNotifications[idx];
       _mockNotifications[idx] = NotificationModel(
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        type: n.type,
+        referenceId: n.referenceId,
+        isRead: true,
+        createdAt: n.createdAt,
+      );
+    }
+  }
+
+  Future<void> markAllAsRead() async {
+    try {
+      await apiClient.dio.post('/notifications/read-all');
+    } catch (_) {}
+    for (int i = 0; i < _mockNotifications.length; i++) {
+      final n = _mockNotifications[i];
+      _mockNotifications[i] = NotificationModel(
         id: n.id,
         title: n.title,
         message: n.message,
