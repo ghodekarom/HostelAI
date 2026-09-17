@@ -17,9 +17,11 @@ final secureStorageProvider = Provider<SecureStorageService>((ref) {
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final activeRole = ref.watch(roleProvider);
+  final storage = ref.watch(secureStorageProvider);
   return ApiClient(
     userId: activeRole.userId,
     technicianId: activeRole.technicianId,
+    storage: storage,
   );
 });
 
