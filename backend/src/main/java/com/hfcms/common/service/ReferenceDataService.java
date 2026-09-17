@@ -96,6 +96,22 @@ public class ReferenceDataService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public HostelDto.Response createHostel(HostelDto.CreateRequest request) {
+        Hostel hostel = Hostel.builder()
+                .name(request.getName())
+                .code(request.getCode())
+                .address(request.getAddress())
+                .build();
+        Hostel saved = hostelRepository.save(hostel);
+        return HostelDto.Response.builder()
+                .id(saved.getId())
+                .name(saved.getName())
+                .code(saved.getCode())
+                .address(saved.getAddress())
+                .build();
+    }
+
     @Transactional(readOnly = true)
     public List<HostelDto.BlockResponse> getBlocksByHostel(Long hostelId) {
         return blockRepository.findByHostelId(hostelId).stream()
@@ -110,6 +126,27 @@ public class ReferenceDataService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public HostelDto.BlockResponse createBlock(HostelDto.CreateBlockRequest request) {
+        Hostel hostel = hostelRepository.findById(request.getHostelId())
+                .orElseThrow(() -> new ResourceNotFoundException("Hostel not found with id: " + request.getHostelId()));
+        Block block = Block.builder()
+                .hostel(hostel)
+                .name(request.getName())
+                .code(request.getCode())
+                .totalFloors(request.getTotalFloors() != null ? request.getTotalFloors() : 1)
+                .build();
+        Block saved = blockRepository.save(block);
+        return HostelDto.BlockResponse.builder()
+                .id(saved.getId())
+                .hostelId(hostel.getId())
+                .hostelName(hostel.getName())
+                .name(saved.getName())
+                .code(saved.getCode())
+                .totalFloors(saved.getTotalFloors())
+                .build();
+    }
+
     @Transactional(readOnly = true)
     public List<HostelDto.RoomResponse> getRoomsByBlock(Long blockId) {
         return roomRepository.findByBlockId(blockId).stream()
@@ -122,6 +159,27 @@ public class ReferenceDataService {
                         .capacity(r.getCapacity())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public HostelDto.RoomResponse createRoom(HostelDto.CreateRoomRequest request) {
+        Block block = blockRepository.findById(request.getBlockId())
+                .orElseThrow(() -> new ResourceNotFoundException("Block not found with id: " + request.getBlockId()));
+        Room room = Room.builder()
+                .block(block)
+                .roomNumber(request.getRoomNumber())
+                .floorNumber(request.getFloorNumber())
+                .capacity(request.getCapacity() != null ? request.getCapacity() : 2)
+                .build();
+        Room saved = roomRepository.save(room);
+        return HostelDto.RoomResponse.builder()
+                .id(saved.getId())
+                .blockId(block.getId())
+                .blockName(block.getName())
+                .roomNumber(saved.getRoomNumber())
+                .floorNumber(saved.getFloorNumber())
+                .capacity(saved.getCapacity())
+                .build();
     }
 
     private CategoryDto.Response mapToCategoryResponse(Category c) {

@@ -52,9 +52,36 @@ public class TechnicianService {
     }
 
     @Transactional(readOnly = true)
-    public InvestigationChecklist getChecklistForComplaint(Long complaintId) {
-        return checklistRepository.findByComplaintId(complaintId)
+    public com.hfcms.complaints.dto.ChecklistResponse getChecklistForComplaint(Long complaintId) {
+        InvestigationChecklist checklist = checklistRepository.findByComplaintId(complaintId)
                 .orElseThrow(() -> new ResourceNotFoundException("No checklist found for complaint: " + complaintId));
+        return mapToChecklistResponse(checklist);
+    }
+
+    private com.hfcms.complaints.dto.ChecklistResponse mapToChecklistResponse(InvestigationChecklist c) {
+        java.util.List<com.hfcms.complaints.dto.ChecklistResponse.ItemResponse> items = c.getItems() != null ? c.getItems().stream()
+                .map(item -> com.hfcms.complaints.dto.ChecklistResponse.ItemResponse.builder()
+                        .id(item.getId())
+                        .itemDescription(item.getItemDescription())
+                        .isCompleted(item.getIsCompleted())
+                        .findings(item.getFindings())
+                        .recordedById(item.getRecordedBy() != null ? item.getRecordedBy().getId() : null)
+                        .recordedByName(item.getRecordedBy() != null ? item.getRecordedBy().getFullName() : null)
+                        .recordedAt(item.getRecordedAt())
+                        .build())
+                .toList() : java.util.List.of();
+
+        return com.hfcms.complaints.dto.ChecklistResponse.builder()
+                .id(c.getId())
+                .complaintId(c.getComplaint().getId())
+                .categoryId(c.getCategory().getId())
+                .categoryName(c.getCategory().getName())
+                .isAiGenerated(c.getIsAiGenerated())
+                .status(c.getStatus())
+                .items(items)
+                .createdAt(c.getCreatedAt())
+                .completedAt(c.getCompletedAt())
+                .build();
     }
 
     @Transactional

@@ -58,4 +58,38 @@ public class HostelDto {
         private Integer floorNumber;
         private Integer capacity;
     }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CreateBlockRequest {
+        @jakarta.validation.constraints.NotNull(message = "Hostel ID is mandatory")
+        private Long hostelId;
+
+        @NotBlank(message = "Block name is mandatory")
+        private String name;
+
+        @NotBlank(message = "Block code is mandatory")
+        private String code;
+
+        private Integer totalFloors;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CreateRoomRequest {
+        @jakarta.validation.constraints.NotNull(message = "Block ID is mandatory")
+        private Long blockId;
+
+        @NotBlank(message = "Room number is mandatory")
+        private String roomNumber;
+
+        @jakarta.validation.constraints.NotNull(message = "Floor number is mandatory")
+        private Integer floorNumber;
+
+        private Integer capacity;
+    }
 }
